@@ -45,12 +45,9 @@ def lambda_handler(event, context):
             try:
                 # load the json we have from either a .json file or a gunziped file
                 payload_dict = json.loads(payload)
-            except JSONDecodeError:
+            except JSONDecodeError as e:
                 # file isn't well formed json, see if we can interpret json from it
-                logger.error("json decode error, attempting to parse json")
-                for block in emit_json_block(StringIO(payload)):
-                    if block:
-                        payload_dict = json.loads(block)
+                logger.error(f"payload is not valid json decode error {e}")
 
             if payload_dict:
                 payload_dict["yup"] = "seen"
