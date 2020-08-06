@@ -152,18 +152,7 @@ resource "aws_iam_role_policy" "data-lake-firehose-policy" {
 EOF
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "data-lake-firehose-logging" {
-  name        = "data-lake-firehose-logging"
-  destination = "extended_s3"
-  extended_s3_configuration {
-    bucket_arn          = aws_s3_bucket.data_lake_output_bucket.arn
-    buffer_interval     = 60
-    buffer_size         = 1
-    compression_format  = "GZIP"
-    error_output_prefix = "errors"
-    role_arn            = aws_iam_role.data-lake-firehose-role.arn
-  }
-}
+
 
 
 resource "aws_s3_bucket" "data_lake_athena_bucket" {
@@ -361,4 +350,174 @@ resource "aws_iam_role_policy" "data_lake_instance_policy" {
 EOF
 }
 
+
+resource "aws_iam_role" "data_lake_lambda_role" {
+  name               = "data_lake_lambda_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "data_lake_lambda_policy" {
+  name = "data_lake_lambda_policy"
+  role = aws_iam_role.data_lake_lambda_role.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Effect": "Allow",
+        "Action": "logs:CreateLogGroup",
+        "Resource": "arn:aws:logs:*:*:*"
+    },
+    {
+        "Effect": "Allow",
+        "Action": [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+        ],
+        "Resource": [
+            "arn:aws:logs:*:*:log-group:/aws/lambda/data_lake_lambda:*"
+        ]
+    },
+    {
+      "Action":[
+      "secretsmanager:GetSecretValue"
+      ],
+      "Effect": "Allow",
+      "Resource":"arn:aws:secretsmanager:*:*:secret:data_lake*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "lambda-exec-role" {
+  role       = aws_iam_role.data_lake_lambda_role.id
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_lambda_function" "data_lake_lambda" {
+  filename         = "firehose-processor/lambda.zip"
+  function_name    = "data_lake_lambda"
+  role             = aws_iam_role.data_lake_lambda_role.arn
+  handler          = "processor.lambda_handler"
+  runtime          = "python3.8"
+  timeout          = 100
+  source_code_hash = filesha256("firehose-processor/lambda.zip")
+}
+
+
+resource "aws_iam_role" "data_lake_firehose_role" {
+  name = "data_lake_firehose_role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+data "aws_iam_policy_document" "data_lake_firehose_role_policy_document" {
+  statement {
+    sid = "1"
+
+    actions = [
+      "s3:*",
+    ]
+
+    resources = [
+      aws_s3_bucket.data_lake_output_bucket.arn,
+      "${aws_s3_bucket.data_lake_output_bucket.arn}/*"
+    ]
+  }
+  statement {
+    sid = "2"
+    actions = [
+      "kinesis:DescribeStreamSummary",
+      "kinesis:GetShardIterator",
+      "kinesis:GetRecords",
+      "kinesis:ListShards",
+      "kinesis:SubscribeToShard",
+      "kinesis:DescribeStream",
+    ]
+    resources = [aws_kinesis_firehose_delivery_stream.data_lake_s3_stream.arn]
+  }
+  statement {
+    sid = "3"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["*"]
+  }
+  statement {
+    sid = "4"
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+    resources = [aws_lambda_function.data_lake_lambda.arn]
+  }
+}
+
+resource "aws_iam_policy" "data_lake_firehose_role_policy" {
+  name   = "data_lake_firehose_role_policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.data_lake_firehose_role_policy_document.json
+}
+
+resource "aws_iam_role_policy_attachment" "data_lake_firehose_role_attach" {
+  role       = aws_iam_role.data_lake_firehose_role.name
+  policy_arn = aws_iam_policy.data_lake_firehose_role_policy.arn
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "data_lake_s3_stream" {
+  name        = "data_lake_s3_stream"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn            = aws_iam_role.data_lake_firehose_role.arn
+    bucket_arn          = aws_s3_bucket.data_lake_output_bucket.arn
+    compression_format  = "UNCOMPRESSED"
+    buffer_interval     = 60
+    buffer_size         = 1
+    error_output_prefix = "errors"
+
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.data_lake_lambda.arn}:$LATEST"
+        }
+      }
+    }
+  }
+}
 
