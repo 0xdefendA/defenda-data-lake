@@ -133,3 +133,7 @@ dmypy.json
 Pipfile.lock
 lambda.zip
 .DS_Store
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/plugins/darwin_amd64/lock.json
+.terraform/plugins/darwin_amd64/terraform-provider-aws_v3.0.0_x5
