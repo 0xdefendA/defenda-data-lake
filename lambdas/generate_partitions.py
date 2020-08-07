@@ -30,17 +30,17 @@ def get_athena_query(config):
     day='{day}',
     hour='{hour}'
     )
-    location 's3://uoc-{config.account}-output-bucket/{year}/{month}/{day}/{hour}'
+    location 's3://data-lake-{config.account}-output-bucket/{year}/{month}/{day}/{hour}'
     """
     return query
 
 
-def handler(event, context):
+def lambda_handler(event, context):
     session = boto3.session.Session()
     athena = session.client("athena")
     config = DotDict({})
     config.account = boto3.client("sts").get_caller_identity().get("Account")
-    config.athena_database = os.environ.get("ATHENA_DATABASE", "events")
+    config.athena_database = os.environ.get("ATHENA_DATABASE", "defenda_datalake")
     config.athena_table = os.environ.get("ATHENA_TABLE", "events")
 
     # query status/wait for response
