@@ -479,7 +479,8 @@ data "aws_iam_policy_document" "data_lake_firehose_role_policy_document" {
     actions = [
       "lambda:InvokeFunction"
     ]
-    resources = [aws_lambda_function.data_lake_lambda.arn]
+    resources = [aws_lambda_function.data_lake_lambda.arn,
+    "${aws_lambda_function.data_lake_lambda.arn}:$LATEST"]
   }
 }
 
