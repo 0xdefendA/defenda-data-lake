@@ -379,26 +379,35 @@ resource "aws_iam_role_policy" "data_lake_lambda_policy" {
   "Version": "2012-10-17",
   "Statement": [
     {
+        "Action":[
+            "secretsmanager:GetSecretValue"
+        ],
         "Effect": "Allow",
-        "Action": "logs:CreateLogGroup",
-        "Resource": "arn:aws:logs:*:*:*"
+        "Resource":"arn:aws:secretsmanager:*:*:secret:data_lake*"
     },
     {
         "Effect": "Allow",
-        "Action": [
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
+        "Action":[
+            "glue:GetDatabase*",
+            "glue:GetTable*",
+            "glue:GetPartitions",
+            "glue:BatchCreatePartition"
         ],
-        "Resource": [
-            "arn:aws:logs:*:*:log-group:/aws/lambda/data_lake_lambda:*"
+        "Resource":[
+            "*"
         ]
     },
     {
-      "Action":[
-      "secretsmanager:GetSecretValue"
-      ],
       "Effect": "Allow",
-      "Resource":"arn:aws:secretsmanager:*:*:secret:data_lake*"
+      "Action":[
+        "athena:Get*",
+        "athena:ListQueryExecutions",
+        "athena:StartQueryExecution"
+      ],
+      "Resource":[
+          "arn:aws:athena:*:*:workgroup/*",
+          "arn:aws:athena:*:*:datacatalog/*"
+      ]
     }
   ]
 }
@@ -411,14 +420,46 @@ resource "aws_iam_role_policy_attachment" "lambda-exec-role" {
 }
 
 resource "aws_lambda_function" "data_lake_lambda" {
-  filename         = "firehose-processor/lambda.zip"
+  filename         = "lambdas/lambda.zip"
   function_name    = "data_lake_lambda"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "processor.lambda_handler"
   runtime          = "python3.8"
   timeout          = 100
-  source_code_hash = filesha256("firehose-processor/lambda.zip")
+  source_code_hash = filesha256("lambdas/lambda.zip")
 }
+
+resource "aws_lambda_function" "data_lake_generate_partitions_lambda" {
+  filename         = "lambdas/lambda.zip"
+  function_name    = "data_lake_generate_partitions"
+  role             = aws_iam_role.data_lake_lambda_role.arn
+  handler          = "generate_partitions.lambda_handler"
+  runtime          = "python3.8"
+  timeout          = 100
+  source_code_hash = filesha256("lambdas/lambda.zip")
+}
+
+# cloudwatch timer for the generate partitions lambda
+resource "aws_cloudwatch_event_rule" "data_lake_generate_partitions_event" {
+  name                = "data_lake_generate_partitions_event"
+  description         = "Trigger a call to generate an athena partition"
+  schedule_expression = "cron(0/10 * * * ? *)"
+}
+
+resource "aws_lambda_permission" "data_lake_allow_cloudwatch_generate_partitions" {
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.data_lake_generate_partitions_lambda.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.data_lake_generate_partitions_event.arn
+}
+
+resource "aws_cloudwatch_event_target" "data_lake_generate_partitions_event_target" {
+  target_id = "data_lake_generate_partitions_event_target"
+  rule      = aws_cloudwatch_event_rule.data_lake_generate_partitions_event.name
+  arn       = aws_lambda_function.data_lake_generate_partitions_lambda.arn
+}
+
 
 
 resource "aws_iam_role" "data_lake_firehose_role" {
