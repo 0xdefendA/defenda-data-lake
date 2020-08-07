@@ -10,6 +10,12 @@ black = "*"
 [packages]
 docker = "*"
 boto3 = "*"
+pyyaml = "*"
+pandas = "*"
+tzlocal = "*"
+netaddr = "*"
+pynsive = "*"
+5400915 = {file = "https://github.com/noahmorrison/chevron/archive/master.zip"}
 
 [requires]
 python_version = "3.8"
