@@ -408,6 +408,15 @@ resource "aws_iam_role_policy" "data_lake_lambda_policy" {
           "arn:aws:athena:*:*:workgroup/*",
           "arn:aws:athena:*:*:datacatalog/*"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action":[
+        "s3:*"
+      ],
+      "Resource":[
+          "arn:aws:s3:::*"
+      ]
     }
   ]
 }
