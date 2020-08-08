@@ -564,7 +564,7 @@ resource "aws_kinesis_firehose_delivery_stream" "data_lake_s3_stream" {
   extended_s3_configuration {
     role_arn            = aws_iam_role.data_lake_firehose_role.arn
     bucket_arn          = aws_s3_bucket.data_lake_output_bucket.arn
-    compression_format  = "UNCOMPRESSED"
+    compression_format  = "GZIP"
     buffer_interval     = 60
     buffer_size         = 1
     error_output_prefix = "errors"
