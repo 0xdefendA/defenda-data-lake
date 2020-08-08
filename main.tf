@@ -16,6 +16,9 @@ output "account_id" {
   value = "${data.aws_caller_identity.current.account_id}"
 }
 
+output "datalake_arn" {
+  value = aws_athena_database.defenda_datalake.id
+}
 
 resource "aws_s3_bucket" "data_lake_input_bucket" {
   bucket = "data-lake-${data.aws_caller_identity.current.account_id}-input-bucket"
@@ -350,6 +353,54 @@ resource "aws_iam_role_policy" "data_lake_instance_policy" {
 EOF
 }
 
+data "aws_iam_policy_document" "data_lake_lambda_role_policy_document" {
+  statement {
+    sid = "1"
+
+    actions = [
+      "s3:*",
+    ]
+
+    resources = [
+      aws_s3_bucket.data_lake_output_bucket.arn,
+      "${aws_s3_bucket.data_lake_output_bucket.arn}/*",
+      aws_s3_bucket.data_lake_athena_bucket.arn,
+      "${aws_s3_bucket.data_lake_athena_bucket.arn}/*"
+    ]
+  }
+  statement {
+    sid = "2"
+    actions = [
+      "glue:GetDatabase*",
+      "glue:GetTable*",
+      "glue:GetPartitions",
+      "glue:BatchCreatePartition"
+    ]
+    resources = ["*"]
+  }
+  statement {
+    sid = "3"
+    actions = [
+      "athena:Get*",
+      "athena:ListQueryExecutions",
+      "athena:StartQueryExecution"
+    ]
+    resources = [
+      "arn:aws:athena:*:*:workgroup/*",
+      "arn:aws:athena:*:*:datacatalog/*"
+    ]
+  }
+  statement {
+    sid = "4"
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+    resources = [
+      aws_lambda_function.data_lake_lambda.arn,
+      "${aws_lambda_function.data_lake_lambda.arn}:$LATEST"
+    ]
+  }
+}
 
 resource "aws_iam_role" "data_lake_lambda_role" {
   name               = "data_lake_lambda_role"
@@ -370,58 +421,18 @@ resource "aws_iam_role" "data_lake_lambda_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "data_lake_lambda_policy" {
-  name = "data_lake_lambda_policy"
-  role = aws_iam_role.data_lake_lambda_role.id
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Action":[
-            "secretsmanager:GetSecretValue"
-        ],
-        "Effect": "Allow",
-        "Resource":"arn:aws:secretsmanager:*:*:secret:data_lake*"
-    },
-    {
-        "Effect": "Allow",
-        "Action":[
-            "glue:GetDatabase*",
-            "glue:GetTable*",
-            "glue:GetPartitions",
-            "glue:BatchCreatePartition"
-        ],
-        "Resource":[
-            "*"
-        ]
-    },
-    {
-      "Effect": "Allow",
-      "Action":[
-        "athena:Get*",
-        "athena:ListQueryExecutions",
-        "athena:StartQueryExecution"
-      ],
-      "Resource":[
-          "arn:aws:athena:*:*:workgroup/*",
-          "arn:aws:athena:*:*:datacatalog/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action":[
-        "s3:*"
-      ],
-      "Resource":[
-          "arn:aws:s3:::*"
-      ]
-    }
-  ]
+resource "aws_iam_policy" "data_lake_lambda_role_policy" {
+  name   = "data_lake_lambda_role_policy"
+  path   = "/"
+  policy = data.aws_iam_policy_document.data_lake_lambda_role_policy_document.json
 }
-EOF
+
+resource "aws_iam_role_policy_attachment" "data_lake_lambda_role_attach" {
+  role       = aws_iam_role.data_lake_lambda_role.name
+  policy_arn = aws_iam_policy.data_lake_lambda_role_policy.arn
 }
+
 
 resource "aws_iam_role_policy_attachment" "lambda-exec-role" {
   role       = aws_iam_role.data_lake_lambda_role.id
@@ -490,6 +501,7 @@ resource "aws_iam_role" "data_lake_firehose_role" {
 }
 EOF
 }
+
 data "aws_iam_policy_document" "data_lake_firehose_role_policy_document" {
   statement {
     sid = "1"
