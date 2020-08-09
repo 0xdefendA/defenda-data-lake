@@ -398,8 +398,8 @@ data "aws_iam_policy_document" "data_lake_lambda_role_policy_document" {
       "lambda:InvokeFunction"
     ]
     resources = [
-      aws_lambda_function.data_lake_lambda.arn,
-      "${aws_lambda_function.data_lake_lambda.arn}:$LATEST"
+      aws_lambda_function.data_lake_firehose_input.arn,
+      "${aws_lambda_function.data_lake_firehose_input.arn}:$LATEST"
     ]
   }
 }
