@@ -493,6 +493,25 @@ resource "aws_cloudwatch_event_target" "data_lake_generate_partitions_event_targ
 }
 
 
+# s3 lambda trigger
+resource "aws_lambda_permission" "allow_bucket_lambda" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.data_lake_s3_input.arn
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.data_lake_input_bucket.arn
+}
+
+resource "aws_s3_bucket_notification" "lambda_bucket_notification" {
+  bucket = aws_s3_bucket.data_lake_input_bucket.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.data_lake_s3_input.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+
+  depends_on = [aws_lambda_permission.allow_bucket_lambda]
+}
 
 resource "aws_iam_role" "data_lake_firehose_role" {
   name = "data_lake_firehose_role"
