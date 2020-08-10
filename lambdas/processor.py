@@ -17,14 +17,14 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, context):
     output = []
     metadata = generate_metadata(context)
-    logger.info(f"metadata is: {metadata}")
+    logger.debug(f"metadata is: {metadata}")
     normalization_plugins = register_plugins("normalization_plugins")
     enrichment_plugins = register_plugins("enrichment_plugins")
 
     if "records" in event:
         for record in event["records"]:
             output_record = {}
-            logger.info(f"found record in event: {record}")
+            logger.debug(f"found record in event: {record}")
             payload = base64.b64decode(record["data"])
 
             payload_dict = None
@@ -47,7 +47,7 @@ def lambda_handler(event, context):
                 if result_record:
                     # TODO, what to do with lambda info as metadata? Do we care?
                     # result_record = merge(result_record, metadata)
-                    logger.info(f" resulting norm/enriched is: {result_record}")
+                    logger.debug(f" resulting norm/enriched is: {result_record}")
                     # json ending in new line so athena recognizes the records
                     output_record = {
                         "recordId": record["recordId"],
@@ -59,7 +59,7 @@ def lambda_handler(event, context):
                 else:
                     # result as None, means drop the record
                     # TODO, what is the right result in firehose terms
-                    logger.info(f"record {record['recordId']} failed processing")
+                    logger.error(f"record {record['recordId']} failed processing")
                     output_record = {
                         "recordId": record["recordId"],
                         "result": "ProcessingFailed",
