@@ -3,6 +3,7 @@ import gzip
 import json
 import logging
 import os
+from time import sleep
 from io import BytesIO, TextIOWrapper, StringIO
 from utils.dotdict import DotDict
 from utils.helpers import is_cloudtrail, generate_metadata, emit_json_block, chunks
@@ -60,16 +61,28 @@ def lambda_handler(event, context):
             s3_key = record.s3.object.key
             # a new bucket will fire for folders *and* files, early exit if it's a folder
             if s3_key.endswith("/"):
-                return event
+                continue
             # assume the file is just good ol json
             source = "s3json"
             # if the file name is cloudtrail-ish
             if is_cloudtrail(s3_key):
                 source = "cloudtrail"
-            try:
-                s3_response = s3.get_object(Bucket=s3_bucket, Key=s3_key)
-            except Exception as e:
-                logger.error(f"{e} while attempting to get_object {s3_bucket} {s3_key}")
+            # up to 5 attempts to get the object ( in case s3 file commit on write is lagging)
+            s3_response = None
+            for x in range(1, 6):
+                try:
+                    s3_response = s3.get_object(Bucket=s3_bucket, Key=s3_key)
+                    break
+                except Exception as e:
+                    logger.error(
+                        f"Attempt {x}: {e} while attempting to get_object {s3_bucket} {s3_key}"
+                    )
+                    sleep(1)
+                    continue
+            if not s3_response:
+                logger.error(
+                    f"5 attempts to retrieve {s3_bucket} {s3_key} failed, moving on"
+                )
                 continue
             s3_data = ""
             # gunzip if zipped
