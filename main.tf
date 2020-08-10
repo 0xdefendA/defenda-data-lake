@@ -402,6 +402,15 @@ data "aws_iam_policy_document" "data_lake_lambda_role_policy_document" {
       "${aws_lambda_function.data_lake_firehose_input.arn}:$LATEST"
     ]
   }
+  statement {
+    sid = "5"
+    actions = [
+      "firehose:PutRecordBatch"
+    ]
+    resources = [
+      aws_kinesis_firehose_delivery_stream.data_lake_s3_stream.arn
+    ]
+  }
 }
 
 resource "aws_iam_role" "data_lake_lambda_role" {
