@@ -66,8 +66,11 @@ def lambda_handler(event, context):
             # if the file name is cloudtrail-ish
             if is_cloudtrail(s3_key):
                 source = "cloudtrail"
-
-            s3_response = s3.get_object(Bucket=s3_bucket, Key=s3_key)
+            try:
+                s3_response = s3.get_object(Bucket=s3_bucket, Key=s3_key)
+            except Exception as e:
+                logger.error(f"{e} while attempting to get_object {s3_bucket} {s3_key}")
+                continue
             s3_data = ""
             # gunzip if zipped
             if s3_key[-3:] == ".gz":
@@ -114,4 +117,4 @@ def lambda_handler(event, context):
             if s3_records:
                 send_to_firehose(s3_records)
 
-        return event
+        return
