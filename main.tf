@@ -362,6 +362,8 @@ data "aws_iam_policy_document" "data_lake_lambda_role_policy_document" {
     ]
 
     resources = [
+      aws_s3_bucket.data_lake_input_bucket.arn,
+      "${aws_s3_bucket.data_lake_input_bucket.arn}/*",
       aws_s3_bucket.data_lake_output_bucket.arn,
       "${aws_s3_bucket.data_lake_output_bucket.arn}/*",
       aws_s3_bucket.data_lake_athena_bucket.arn,
@@ -396,8 +398,17 @@ data "aws_iam_policy_document" "data_lake_lambda_role_policy_document" {
       "lambda:InvokeFunction"
     ]
     resources = [
-      aws_lambda_function.data_lake_lambda.arn,
-      "${aws_lambda_function.data_lake_lambda.arn}:$LATEST"
+      aws_lambda_function.data_lake_firehose_input.arn,
+      "${aws_lambda_function.data_lake_firehose_input.arn}:$LATEST"
+    ]
+  }
+  statement {
+    sid = "5"
+    actions = [
+      "firehose:PutRecordBatch"
+    ]
+    resources = [
+      aws_kinesis_firehose_delivery_stream.data_lake_s3_stream.arn
     ]
   }
 }
@@ -439,11 +450,21 @@ resource "aws_iam_role_policy_attachment" "lambda-exec-role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_lambda_function" "data_lake_lambda" {
+resource "aws_lambda_function" "data_lake_firehose_input" {
   filename         = "lambdas/lambda.zip"
-  function_name    = "data_lake_lambda"
+  function_name    = "data_lake_firehose_input"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "processor.lambda_handler"
+  runtime          = "python3.8"
+  timeout          = 100
+  source_code_hash = filesha256("lambdas/lambda.zip")
+}
+
+resource "aws_lambda_function" "data_lake_s3_input" {
+  filename         = "lambdas/lambda.zip"
+  function_name    = "data_lake_s3_input"
+  role             = aws_iam_role.data_lake_lambda_role.arn
+  handler          = "s3_to_firehose.lambda_handler"
   runtime          = "python3.8"
   timeout          = 100
   source_code_hash = filesha256("lambdas/lambda.zip")
@@ -481,6 +502,25 @@ resource "aws_cloudwatch_event_target" "data_lake_generate_partitions_event_targ
 }
 
 
+# s3 lambda trigger
+resource "aws_lambda_permission" "allow_bucket_lambda" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.data_lake_s3_input.arn
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.data_lake_input_bucket.arn
+}
+
+resource "aws_s3_bucket_notification" "lambda_bucket_notification" {
+  bucket = aws_s3_bucket.data_lake_input_bucket.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.data_lake_s3_input.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+
+  depends_on = [aws_lambda_permission.allow_bucket_lambda]
+}
 
 resource "aws_iam_role" "data_lake_firehose_role" {
   name = "data_lake_firehose_role"
@@ -541,8 +581,8 @@ data "aws_iam_policy_document" "data_lake_firehose_role_policy_document" {
     actions = [
       "lambda:InvokeFunction"
     ]
-    resources = [aws_lambda_function.data_lake_lambda.arn,
-    "${aws_lambda_function.data_lake_lambda.arn}:$LATEST"]
+    resources = [aws_lambda_function.data_lake_firehose_input.arn,
+    "${aws_lambda_function.data_lake_firehose_input.arn}:$LATEST"]
   }
 }
 
@@ -577,7 +617,7 @@ resource "aws_kinesis_firehose_delivery_stream" "data_lake_s3_stream" {
 
         parameters {
           parameter_name  = "LambdaArn"
-          parameter_value = "${aws_lambda_function.data_lake_lambda.arn}:$LATEST"
+          parameter_value = "${aws_lambda_function.data_lake_firehose_input.arn}:$LATEST"
         }
       }
     }
