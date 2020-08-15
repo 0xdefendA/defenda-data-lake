@@ -14,6 +14,7 @@ def get_lambda_zip():
         "datalake-lambdas",
         "cp /asset-output/lambda.zip /mnt/cdk-data-lake/lambdas",
         volumes={path.abspath("."): {"bind": "/mnt/cdk-data-lake", "mode": "rw",}},
+        auto_remove=True,
     )
 
 
