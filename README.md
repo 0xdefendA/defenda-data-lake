@@ -114,12 +114,25 @@ For input that can't be hooked up to firehose, you can deposit raw JSON in the s
 #### Cost
 This costs nothing to deploy. Costs will vary depending on your data ingestion, but can get started today without having to guesstimate event per second, data size, throughput, or other statistics you usually have to commit to in other log management platforms.
 
+Preliminary tests sending 500MB of data to the data lake resulted in the following costs:
+
+Test using s3 as the input (copying json files to s3):
+ - s3: $0.51
+ - firehose: $0.02
+ - athena: $0.00
+
+Test using firehose only as the input (no files, direct to firehose):
+ - s3: $0.02
+ - firehose: $0.02
+ - athena: $0.00
+
+
 ### Disadvantages
 
 #### Latency
 Depending on your rate of event ingestion, firehose will queue events for 60 seconds before flushing to s3. If you have enough flow, this usually isn't a problem but if your event flow is very low you may see a delay.
 
-#### Cost potential
+#### Query Cost potential
 
 Athena's pricing is based on $/query/data that as of this writing is $5 per terabyte. Each query is charged based on the amount of underlying data that was scanned to resolve the query and prorated accordingly. So if your query operated on a megabyte of data in a partition, your charge would be only for that megabyte.
 
