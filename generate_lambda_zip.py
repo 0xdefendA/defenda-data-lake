@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 import docker
 from os import path
+import subprocess
+
+
+def refresh_requirements():
+    subprocess.Popen(
+        "pipenv run pip freeze > lambdas/requirements.txt",
+        shell=True,
+        stdout=subprocess.PIPE,
+    ).stdout.read()
 
 
 def build_lambda_image():
@@ -19,6 +28,8 @@ def get_lambda_zip():
 
 
 if __name__ == "__main__":
+    print("refreshing requirements.txt using pipenv")
+    refresh_requirements()
     print("Building image with requirements.txt")
     build_lambda_image()
     print("Retrieving zip file for lambda")
