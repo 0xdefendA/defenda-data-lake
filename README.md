@@ -10,16 +10,27 @@ This solution uses only serverless constructs to allow you to store unstructured
 
 ## Deployment:
 
-Deployment is via terraform and a mini-docker environment to compile the lambdas.
+Deployment is via python/pipenv, terraform and a mini-docker environment to compile the lambdas.
 
 It uses us-west-2 as the default region, set a terraform.tfvars variable ( aws_region = "some-other-region ) if you'd like it elsewhere.
 
 
+First get the code and initiate pipenv (or [install it if you aren't converted yet](https://pipenv.pypa.io/en/latest/install/)):
 
-Init terraform
+```bash
+git clone <this repo> .
+pipenv --python 3.8
+```
+
+Now build the lambdas:
+
+```bash
+./generate_lambda_zip.py
+```
+
+Init and run terraform
 ```bash
 terraform init
-./generate_lambda_zip.py
 terraform plan
 terraform apply
 ```
