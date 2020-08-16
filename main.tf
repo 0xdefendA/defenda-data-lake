@@ -159,7 +159,7 @@ EOF
 
 
 resource "aws_s3_bucket" "data_lake_athena_bucket" {
-  bucket = "${data.aws_caller_identity.current.account_id}-aws-athena-query-results-${data.aws_region.current.name}"
+  bucket = "${data.aws_caller_identity.current.account_id}-defenda-data-lake-athena-query-results-${data.aws_region.current.name}"
   acl    = "private"
 
   versioning {
@@ -187,6 +187,19 @@ resource "aws_s3_bucket_public_access_block" "data_lake_athena_bucket" {
 resource "aws_athena_database" "defenda_datalake" {
   name   = "defenda_datalake"
   bucket = aws_s3_bucket.data_lake_athena_bucket.id
+}
+
+resource "aws_athena_workgroup" "defenda_datalake_workgroup" {
+  name = "defenda_datalake"
+
+  configuration {
+    enforce_workgroup_configuration    = true
+    publish_cloudwatch_metrics_enabled = true
+
+    result_configuration {
+      output_location = "s3://${aws_s3_bucket.data_lake_athena_bucket.bucket}/"
+    }
+  }
 }
 
 resource "aws_glue_catalog_table" "data_lake_events_table" {
