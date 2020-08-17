@@ -247,11 +247,6 @@ resource "aws_glue_catalog_table" "data_lake_events_table" {
     }
 
     columns {
-      name = "_base64"
-      type = "string"
-    }
-
-    columns {
       name = "utctimestamp"
       type = "string"
     }
