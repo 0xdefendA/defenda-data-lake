@@ -12,7 +12,7 @@ from json import JSONDecodeError
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 FIREHOSE_DELIVERY_STREAM = os.environ.get(
-    "FIREHOSE_DELIVERY_STREAM", "data_lake_s3_stream"
+    "FIREHOSE_DELIVERY_STREAM", "defenda_data_lake_s3_stream"
 )
 FIREHOSE_BATCH_SIZE = os.environ.get("FIREHOSE_BATCH_SIZE", 100)
 

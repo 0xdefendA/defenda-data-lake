@@ -21,7 +21,7 @@ output "datalake_arn" {
 }
 
 resource "aws_s3_bucket" "data_lake_input_bucket" {
-  bucket = "data-lake-${data.aws_caller_identity.current.account_id}-input-bucket"
+  bucket = "${data.aws_caller_identity.current.account_id}-defenda-data-lake-input-bucket"
   acl    = "private"
 
   versioning {
@@ -52,7 +52,7 @@ resource "aws_s3_bucket_public_access_block" "data_lake_input_bucket" {
 }
 
 resource "aws_s3_bucket" "data_lake_output_bucket" {
-  bucket = "data-lake-${data.aws_caller_identity.current.account_id}-output-bucket"
+  bucket = "${data.aws_caller_identity.current.account_id}-defenda-data-lake-output-bucket"
   acl    = "private"
 
   versioning {
@@ -83,7 +83,7 @@ resource "aws_s3_bucket_public_access_block" "data_lake_output_bucket" {
 }
 
 resource "aws_iam_role" "data-lake-firehose-role" {
-  name = "data-lake-firehose-role"
+  name = "defenda-data-lake-firehose-role"
 
   assume_role_policy = <<EOF
 {
@@ -103,7 +103,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "data-lake-firehose-policy" {
-  name = "data-lake-firehose-policy"
+  name = "defenda-data-lake-firehose-policy"
   role = aws_iam_role.data-lake-firehose-role.id
 
   policy = <<EOF
@@ -185,12 +185,12 @@ resource "aws_s3_bucket_public_access_block" "data_lake_athena_bucket" {
 }
 
 resource "aws_athena_database" "defenda_datalake" {
-  name   = "defenda_datalake"
+  name   = "defenda_data_lake"
   bucket = aws_s3_bucket.data_lake_athena_bucket.id
 }
 
 resource "aws_athena_workgroup" "defenda_datalake_workgroup" {
-  name = "defenda_datalake"
+  name = "defenda_data_lake"
 
   configuration {
     enforce_workgroup_configuration    = true
@@ -247,11 +247,6 @@ resource "aws_glue_catalog_table" "data_lake_events_table" {
     }
 
     columns {
-      name = "_base64"
-      type = "string"
-    }
-
-    columns {
       name = "utctimestamp"
       type = "string"
     }
@@ -296,7 +291,7 @@ resource "aws_glue_catalog_table" "data_lake_events_table" {
 
 
 resource "aws_iam_role" "data_lake_instance_role" {
-  name = "data_lake_instance_role"
+  name = "defenda_data_lake_instance_role"
 
   assume_role_policy = <<EOF
 {
@@ -427,7 +422,7 @@ data "aws_iam_policy_document" "data_lake_lambda_role_policy_document" {
 }
 
 resource "aws_iam_role" "data_lake_lambda_role" {
-  name               = "data_lake_lambda_role"
+  name               = "defenda_data_lake_lambda_role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -447,7 +442,7 @@ EOF
 
 
 resource "aws_iam_policy" "data_lake_lambda_role_policy" {
-  name   = "data_lake_lambda_role_policy"
+  name   = "defenda_data_lake_lambda_role_policy"
   path   = "/"
   policy = data.aws_iam_policy_document.data_lake_lambda_role_policy_document.json
 }
@@ -465,7 +460,7 @@ resource "aws_iam_role_policy_attachment" "lambda-exec-role" {
 
 resource "aws_lambda_function" "data_lake_firehose_input" {
   filename         = "lambdas/lambda.zip"
-  function_name    = "data_lake_firehose_input"
+  function_name    = "defenda_data_lake_firehose_input"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "processor.lambda_handler"
   runtime          = "python3.8"
@@ -475,7 +470,7 @@ resource "aws_lambda_function" "data_lake_firehose_input" {
 
 resource "aws_lambda_function" "data_lake_s3_input" {
   filename         = "lambdas/lambda.zip"
-  function_name    = "data_lake_s3_input"
+  function_name    = "defenda_data_lake_s3_input"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "s3_to_firehose.lambda_handler"
   runtime          = "python3.8"
@@ -485,7 +480,7 @@ resource "aws_lambda_function" "data_lake_s3_input" {
 
 resource "aws_lambda_function" "data_lake_generate_partitions_lambda" {
   filename         = "lambdas/lambda.zip"
-  function_name    = "data_lake_generate_partitions"
+  function_name    = "defenda_data_lake_generate_partitions"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "generate_partitions.lambda_handler"
   runtime          = "python3.8"
@@ -495,7 +490,7 @@ resource "aws_lambda_function" "data_lake_generate_partitions_lambda" {
 
 # cloudwatch timer for the generate partitions lambda
 resource "aws_cloudwatch_event_rule" "data_lake_generate_partitions_event" {
-  name                = "data_lake_generate_partitions_event"
+  name                = "defenda_data_lake_generate_partitions_event"
   description         = "Trigger a call to generate an athena partition"
   schedule_expression = "cron(0/10 * * * ? *)"
 }
@@ -509,7 +504,7 @@ resource "aws_lambda_permission" "data_lake_allow_cloudwatch_generate_partitions
 }
 
 resource "aws_cloudwatch_event_target" "data_lake_generate_partitions_event_target" {
-  target_id = "data_lake_generate_partitions_event_target"
+  target_id = "defenda_data_lake_generate_partitions_event_target"
   rule      = aws_cloudwatch_event_rule.data_lake_generate_partitions_event.name
   arn       = aws_lambda_function.data_lake_generate_partitions_lambda.arn
 }
@@ -536,7 +531,7 @@ resource "aws_s3_bucket_notification" "lambda_bucket_notification" {
 }
 
 resource "aws_iam_role" "data_lake_firehose_role" {
-  name = "data_lake_firehose_role"
+  name = "defenda_data_lake_firehose_role"
 
   assume_role_policy = <<EOF
 {
@@ -600,7 +595,7 @@ data "aws_iam_policy_document" "data_lake_firehose_role_policy_document" {
 }
 
 resource "aws_iam_policy" "data_lake_firehose_role_policy" {
-  name   = "data_lake_firehose_role_policy"
+  name   = "defenda_data_lake_firehose_role_policy"
   path   = "/"
   policy = data.aws_iam_policy_document.data_lake_firehose_role_policy_document.json
 }
@@ -611,7 +606,7 @@ resource "aws_iam_role_policy_attachment" "data_lake_firehose_role_attach" {
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "data_lake_s3_stream" {
-  name        = "data_lake_s3_stream"
+  name        = "defenda_data_lake_s3_stream"
   destination = "extended_s3"
 
   extended_s3_configuration {

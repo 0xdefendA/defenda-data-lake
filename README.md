@@ -66,8 +66,6 @@ Athena does require *some* structure to allow for querying. To enable that and s
     - a record of what plugins operated on this event
 - details (string)
     - this `string` is the native JSON of the event. Stored as a string to allow for json_extract_scalar operations to query the JSON structure.
-- _base64 (string)
-    - a base64 representation of the entire event. Athena returns csv by default which can be troublesome to return to JSON. Decoding this field yields the native json for the event.
 - year (string) (Partitioned)
     - partition for athena
 - month (string) (Partitioned)
