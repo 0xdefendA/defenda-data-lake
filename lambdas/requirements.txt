@@ -2,14 +2,15 @@ appdirs==1.4.4
 astroid==2.4.2
 attrs==19.3.0
 black==19.10b0
-boto3==1.14.37
-botocore==1.17.37
+boto3==1.14.43
+botocore==1.17.43
 certifi==2020.6.20
 chardet==3.0.4
 chevron @ https://github.com/noahmorrison/chevron/archive/master.zip
 click==7.1.2
-docker==4.2.2
+docker==4.3.0
 docutils==0.15.2
+future==0.18.2
 idna==2.10
 isort==4.3.21
 jmespath==0.10.0
@@ -19,6 +20,7 @@ netaddr==0.8.0
 numpy==1.19.1
 pandas==1.1.0
 pathspec==0.8.0
+PyAthena==1.11.0
 pylint==2.5.3
 pynsive==0.2.7
 python-dateutil==2.8.1
@@ -28,6 +30,7 @@ regex==2020.7.14
 requests==2.24.0
 s3transfer==0.3.3
 six==1.15.0
+tenacity==6.2.0
 toml==0.10.1
 typed-ast==1.4.1
 tzlocal==2.1

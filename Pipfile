@@ -16,6 +16,7 @@ tzlocal = "*"
 netaddr = "*"
 pynsive = "*"
 5400915 = {file = "https://github.com/noahmorrison/chevron/archive/master.zip"}
+pyathena = "*"
 
 [requires]
 python_version = "3.8"
