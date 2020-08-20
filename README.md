@@ -84,7 +84,7 @@ SELECT utctimestamp,
          source,
          details
 
-FROM "defenda_datalake"."events"
+FROM "defenda_data_lake"."events"
     where
     source='cloudtrail' AND json_extract_scalar(details,'$.eventname') = 'ConsoleLogin'
     AND (
