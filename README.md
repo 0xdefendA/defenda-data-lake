@@ -160,3 +160,124 @@ Anything that sends json to firehost can be used as an input into the data lake.
 - [gsuite log ingestion](https://github.com/jeffbryner/gsuite-activity-lambda)
 - [sophos log ingestion](https://github.com/jeffbryner/sophos-activity-lambda)
 - [meraki log ingestion](https://github.com/jeffbryner/meraki-activity-lambda)
+
+## Plugins
+Inspired by [MozDef's plugin system](https://github.com/mozilla/MozDef/tree/master/mq/plugins) via [pynsive](https://github.com/zinic/pynsive/), the plugins in the data lake use a similar concept of operations, but are ordered a bit differently.
+
+### Plugin types
+Plugins can either normalize or enrich an event. Events are first run through normalization plugins, then through enrichment plugins. This makes it easier to target your plugin to the task at hand, and makes it easier to perform whatever operation you are envisoning.
+
+Plugins are python, and register themselves to receive events containing a field, a category or a tag. Plugins can signal they'd like to see all events by registering for '*'.
+
+If an event matches the registration, the event and it's metadata are sent to the plugin where the plugin can rearrange/rename fields (normalization), add information to the event (enrichment) or perform any operation you might envision with the event.
+
+A plugin can signal to drop the event by returning None for the message. The pipeline will not store the event, which can help weed out noise.
+
+### Sample plugin
+Lets look at the sample Gsuite login plugin configured to operate on events from the [gsuite log ingestion](https://github.com/jeffbryner/gsuite-activity-lambda) project that polls Google for gsuite security events and sends them to firehose.
+
+```python
+class message(object):
+
+    def __init__(self):
+        '''
+        handle gsuite login activity record
+        '''
+
+        self.registration = ['kind']
+        self.priority = 20
+```
+
+The plugin registers to receive any even that has a field named 'kind'. It puts itself as priority 20, meaning any plugin with a lower number will receive the event first. This allows you to order your plugins in case that is important in the plugin pipeline logic.
+
+Next the plugin contains the logic to use when encountering a matching event:
+
+```python
+    def onMessage(self, message, metadata):
+        # for convenience, make a dot dict version of the message
+        dot_message=DotDict(message)
+
+        # double check that this is our target message
+        if 'admin#reports#activity' not in dot_message.get('details.kind','')\
+            or 'id' not in message.get('details','') \
+            or 'etag' not in message.get('details',''):
+            return(message, metadata)
+# <trimmed for brevity>
+```
+
+Your plugins can make use of the utils functions like DotDict, etc to operate on an event. It's best practice to first ensure this event fully matches what you expect and this plugin is double checking for certain fields in the structure and returning the message unchanged if there isn't a match.
+
+Normalization plugins usually cherry pick fields from the original event and surface them to standardized fields to make querying/correlating easier. For example this plugin sets some tags and brings out the IP address and timestamp:
+
+```python
+        message["source"]="gsuite"
+        message["tags"].append("gsuite")
+
+        # clean up ipaddress field
+        if 'ipaddress' in message['details']:
+            message['details']['sourceipaddress']=message['details']['ipaddress']
+            del message['details']['ipaddress']
+
+        # set the actual time
+        if dot_message.get("details.id.time",None):
+            message['utctimestamp']=toUTC(message['details']['id']['time']).isoformat()
+
+```
+
+it goes on to do the same for other common fields and most importantly sets a human readable summary:
+
+```python
+        # set summary
+        message["summary"]=chevron.render("{{details.user}} {{details.events.0.name}} from IP {{details.sourceipaddress}}",message)
+```
+The [chevron library](https://github.com/noahmorrison/chevron) allows us to use mustache templates to access fields and fields within lists to pull out information from the event as needed. ```details.events.0.name``` in this case is looking for the first item in the details.events list and if that exists, it uses the ```name``` field in the text. Chevron is forgiving, you can reference fields that may not exist, or only exist in some cases.
+
+The utility libraries are purposefully crafted to allow you to get at the most stubborn data. In a gsuite event for example, the majority of the information is tucked away in key/value fields. Take this marker for suspicious logins as an example:
+
+```json
+    "events": [
+        {
+            "type": "login",
+            "name": "login_success",
+            "parameters": [
+                {
+                    "name": "login_type",
+                    "value": "exchange"
+                },
+                {
+                    "name": "login_challenge_method",
+                    "multiValue": [
+                        "none"
+                    ]
+                },
+                {
+                    "name": "is_suspicious",
+                    "boolValue": false
+                }
+            ]
+        }
+    ]
+```
+
+You can see there are several 'name' fields with a parameters list that make it difficult to programatically query.
+
+This plugin solves this via the use of the dict_match function like so:
+
+```python
+        #suspicious?
+        suspicious={"boolvalue":True,"name":"is_suspicious"}
+        for e in dot_message.get("details.events",[]):
+            for p in e.get("parameters",[]):
+                if dict_match(suspicious,p):
+                    message["details"]["suspicious"]=True
+```
+
+The dict_match function takes a dictionary of keys and values and compares it to something. If the keys and values match, it returns true which in this case allows to mark an event as suspicious if the name='is_suspicious' and a field called 'boolvalue' is True.
+
+Lastly the plugin returns the event and metadata back to the pipeline to be sent on to another plugin, or to the final data lake:
+
+```python
+        return (message, metadata)
+```
+
+It's best to include tests for plugins, and the [test for the gsuite login plugin can be found here](https://github.com/0xdefendA/defenda-data-lake/blob/main/lambdas/tests/test_plugin_gsuite_logins.py) as an example.
