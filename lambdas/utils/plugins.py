@@ -69,7 +69,7 @@ def send_event_to_plugins(anevent, metadata, pluginList):
     if not isinstance(anevent, dict):
         raise TypeError("event is type {0}, should be a dict".format(type(anevent)))
 
-    # expecting tuple of module,criteria,priority in pluginList
+    # expecting tuple of module, criteria, priority in pluginList
     # sort the plugin list by priority
     executed_plugins = []
     for plugin in sorted(pluginList, key=itemgetter(2), reverse=False):
