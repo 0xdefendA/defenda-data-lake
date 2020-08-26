@@ -102,6 +102,9 @@ FROM "defenda_data_lake"."events"
 ```
 
 You can use the [json_extract_scalar](https://prestodb.io/docs/current/functions/json.html) function and [json path expressions](https://goessner.net/articles/JsonPath/index.html#e2) to get at any layer of the nested JSON stored in the 'details' field as part of your query.
+
+The date portion of the where clause allows us to hone in on a particular time period and allows us to limit the cost of the query by limiting the amount of data scanned by Athena.
+
 Queries can be any valid (Presto SQL)[https://prestodb.io/docs/current/sql/select.html] including (functions)[https://prestodb.io/docs/current/functions.html]
 
 ### Advantages
@@ -139,7 +142,7 @@ Test using firehose only as the input (no files, direct to firehose):
 ### Disadvantages
 
 #### Latency
-Depending on your rate of event ingestion, firehose will queue events for 60 seconds before flushing to s3. If you have enough flow, this usually isn't a problem but if your event flow is very low you may see a delay.
+Depending on your rate of event ingestion, firehose will queue events for 60 seconds before flushing to s3. If you have enough flow, this usually isn't a problem but if your event flow is very low you may see a slight delay.
 
 #### Query Cost potential
 
@@ -148,3 +151,12 @@ Athena's pricing is based on $/query/data that as of this writing is $5 per tera
 However it is a `per query` charge. So if you aren't careful with your queries and don't make use of partitions you can run up a bill.
 
 To help, data is automatically partitioned in hour chunks (year/month/day/hour structure in the s3 bucket). By simply adding some criteria to your where clause you can limit the amount of data you interact with and are charged for. Data is also automatically gzipped to also reduce the charges.
+
+
+## Companion Projects
+
+Anything that sends json to firehost can be used as an input into the data lake. Here are some sample companion projects that do just that to send security events from some common data sources:
+
+- [gsuite log ingestion](https://github.com/jeffbryner/gsuite-activity-lambda)
+- [sophos log ingestion](https://github.com/jeffbryner/sophos-activity-lambda)
+- [meraki log ingestion](https://github.com/jeffbryner/meraki-activity-lambda)
