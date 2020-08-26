@@ -1,8 +1,7 @@
 # safelist
 branches:
   only:
-    - master
-    - tests
+    - main
 
 os:
   - linux
