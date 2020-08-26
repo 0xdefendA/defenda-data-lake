@@ -1,0 +1,28 @@
+# safelist
+branches:
+  only:
+    - master
+    - tests
+
+os:
+  - linux
+
+language: python
+python:
+  - "3.8"
+
+env:
+  -
+
+install:
+  - pip install pipenv
+  - pipenv install -d
+
+# command to run tests
+script:
+  - pytest
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always

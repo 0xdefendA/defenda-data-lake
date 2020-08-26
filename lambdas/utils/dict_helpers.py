@@ -1,6 +1,7 @@
 import collections
 from copy import deepcopy
 
+
 def merge(dict1, dict2):
     """ Return a new dictionary by merging two dictionaries recursively. """
 
@@ -14,13 +15,14 @@ def merge(dict1, dict2):
 
     return result
 
+
 def find_keys(node, kv):
     """Returns all the keys matching kv in a given node/dict"""
 
     if isinstance(node, list):
         for i in node:
             for x in find_keys(i, kv):
-               yield x
+                yield x
     elif isinstance(node, dict):
         if kv in node:
             yield node[kv]
@@ -28,13 +30,14 @@ def find_keys(node, kv):
             for x in find_keys(j, kv):
                 yield x
 
+
 def enum_values(node):
     """Returns all the values in a given dict/node"""
 
     if isinstance(node, list):
         for i in node:
             for x in enum_values(i):
-               yield x
+                yield x
     elif isinstance(node, dict):
         for j in node.values():
             for x in enum_values(j):
@@ -42,29 +45,52 @@ def enum_values(node):
     else:
         yield node
 
+
 def enum_keys(node):
     """Returns all the keys in a given dict/node"""
-    
+
     if isinstance(node, list):
         for i in node:
             for x in enum_keys(i):
-               yield x
+                yield x
     elif isinstance(node, dict):
         for j in node.keys():
             yield j
             for x in enum_keys(node[j]):
-                yield x                        
+                yield x
+
 
 def sub_dict(somedict, somekeys, default=None):
     """Return just the given keys from a dict"""
 
-    return dict([ (k, somedict.get(k, default)) for k in somekeys ])
+    return dict([(k, somedict.get(k, default)) for k in somekeys])
+
 
 def dict_match(query_dict, target_dict):
     """Determine if the target_dict contains the keys/values in the query_dict"""
 
-    query_keys=list(enum_keys(query_dict))
-    if sub_dict(target_dict,query_keys)==query_dict:
+    query_keys = list(enum_keys(query_dict))
+    if sub_dict(target_dict, query_keys) == query_dict:
         return True
     else:
         return False
+
+
+def dictpath(path):
+    """split a string representing a
+    nested dictionary path key.subkey.subkey
+    """
+    for i in path.split("."):
+        yield "{0}".format(i)
+
+
+def getValueByPath(input_dict, path_string):
+    """
+    Gets data/value from a dictionary using a dotted accessor-string
+    http://stackoverflow.com/a/7534478
+    path_string can be key.subkey.subkey.subkey
+    """
+    return_data = input_dict
+    for chunk in path_string.split("."):
+        return_data = return_data.get(chunk, {})
+    return return_data

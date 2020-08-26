@@ -1,0 +1,37 @@
+{
+    "kind": "admin#reports#activity",
+    "id": {
+        "time": "2020-03-02T17:54:33.253Z",
+        "uniqueQualifier": "123456193837",
+        "applicationName": "login",
+        "customerId": "123456bbh"
+    },
+    "etag": "\"12345684sebSczDxOtZ17CIssbQ/fcUkSWOHV-mPDcYGbkgHvS5ghwg\"",
+    "actor": {
+        "email": "someone@somewhere.com",
+        "profileId": "123456359252796690369"
+    },
+    "ipAddress": "123.456.253.226",
+    "events": [
+        {
+            "type": "login",
+            "name": "login_success",
+            "parameters": [
+                {
+                    "name": "login_type",
+                    "value": "exchange"
+                },
+                {
+                    "name": "login_challenge_method",
+                    "multiValue": [
+                        "none"
+                    ]
+                },
+                {
+                    "name": "is_suspicious",
+                    "boolValue": false
+                }
+            ]
+        }
+    ]
+}
