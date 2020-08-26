@@ -77,12 +77,17 @@ def send_event_to_plugins(anevent, metadata, pluginList):
         send = False
         if isinstance(plugin[1], list):
             try:
-                plugin_matching_keys = set([item.lower() for item in plugin[1]])
-                event_tokens = [e for e in event_criteria_values(anevent)]
-                if "*" in plugin_matching_keys or plugin_matching_keys.intersection(
-                    event_tokens
-                ):
+                if "*" in plugin_matching_keys:
+                    # plugin wants to see all events, early exit the check
                     send = True
+                else:
+                    # intersect the plugin field names
+                    # with the fields in the event
+                    # if they match, the plugin wants to see this event
+                    plugin_matching_keys = set([item.lower() for item in plugin[1]])
+                    event_tokens = [e for e in event_criteria_values(anevent)]
+                    if plugin_matching_keys.intersection(event_tokens):
+                        send = True
             except TypeError:
                 logger.error(
                     "TypeError on set intersection for dict {0}".format(anevent)
