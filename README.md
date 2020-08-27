@@ -188,7 +188,9 @@ class message(object):
         self.priority = 20
 ```
 
-The plugin registers to receive any even that has a field named 'kind'. It puts itself as priority 20, meaning any plugin with a lower number will receive the event first. This allows you to order your plugins in case that is important in the plugin pipeline logic.
+The plugin registers to receive any even that has a field named 'kind'. The registration property is a list and can contain a list of fields that, if present, the plugin would like to receive. You could have a registration of ```['ipaddress','ip_address','srcip']``` for example to receive any event that contains any or all of those fields.
+
+Next, the plugin puts itself as priority 20, meaning any plugin with a lower number will receive the event first. This allows you to order your plugins in case that is important in the plugin pipeline logic. Plugins will be called in order of priority, 0 going first, higher numbers going later.
 
 Next the plugin contains the logic to use when encountering a matching event:
 
