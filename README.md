@@ -160,6 +160,7 @@ Anything that sends json to firehost can be used as an input into the data lake.
 - [gsuite log ingestion](https://github.com/jeffbryner/gsuite-activity-lambda)
 - [sophos log ingestion](https://github.com/jeffbryner/sophos-activity-lambda)
 - [meraki log ingestion](https://github.com/jeffbryner/meraki-activity-lambda)
+- [beats log ingestion](https://github.com/jeffbryner/firehose-es-input#browserbeat-example)
 
 ## Plugins
 Inspired by [MozDef's plugin system](https://github.com/mozilla/MozDef/tree/master/mq/plugins) via [pynsive](https://github.com/zinic/pynsive/), the plugins in the data lake use a similar concept of operations, but are ordered a bit differently.
