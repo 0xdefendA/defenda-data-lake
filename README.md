@@ -105,7 +105,7 @@ You can use the [json_extract_scalar](https://prestodb.io/docs/current/functions
 
 The date portion of the where clause allows us to hone in on a particular time period and allows us to limit the cost of the query by limiting the amount of data scanned by Athena.
 
-Queries can be any valid [Presto SQL](https://prestodb.io/docs/current/sql/select.html) including[functions](https://prestodb.io/docs/current/functions.html)
+Queries can be any valid [Presto SQL](https://prestodb.io/docs/current/sql/select.html) including [functions](https://prestodb.io/docs/current/functions.html)
 
 ### Advantages
 
