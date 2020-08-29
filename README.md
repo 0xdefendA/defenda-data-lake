@@ -1,6 +1,10 @@
 # defendA Data Lake
 An AWS-native, serverless log management system to allow you to ingest unstructured JSON, normalize & enrich it and store it in Athena for queries and analysis.
 
+## Video intro
+Here's a brief video intro to the data lake
+[![video intro](http://img.youtube.com/vi/eYQ0gjTMVhc/0.jpg)](http://www.youtube.com/watch?v=eYQ0gjTMVhc "defendA security data lake")
+
 ## Why?
 Centralized log/event management is a core element of an infosec program, yet most solutions are not cloud native, require unnecessary servers/clusters and force you to massage your events into a strict format.
 
