@@ -1,6 +1,9 @@
 # defendA Data Lake
 An AWS-native, serverless log management system to allow you to ingest unstructured JSON, normalize & enrich it and store it in Athena for queries and analysis.
 
+**Build Status:**
+- Master [![Build Status](https://travis-ci.com/0xdefenda/defenda-data-lake.svg?branch=master) ](https://travis-ci.com/0xdefenda/defenda-data-lake)
+
 ## Video intro
 Here's a brief video intro to the data lake.
 
