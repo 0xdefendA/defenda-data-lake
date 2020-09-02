@@ -19,6 +19,9 @@ class message(object):
         message = DotDict(message)
         message_keys = list(enum_keys(message))
 
+        # all the ips we encounter along the way
+        all_ips = []
+
         # search for source ip address
         # likely places for a source IP
         likely_source_fields = [
@@ -66,6 +69,7 @@ class message(object):
                         for ip in source_ips:
                             if is_ip(ip):
                                 message.details.sourceipaddress = ip
+                                all_ips.append(ip)
                                 # first one wins
                                 # raise an error to break both for loops
                                 raise StopIteration
@@ -85,10 +89,22 @@ class message(object):
                         for ip in destination_ips:
                             if is_ip(ip):
                                 message.details.destinationipaddress = ip
+                                all_ips.append(ip)
                                 # first one wins
                                 # raise an error to break both for loops
                                 raise StopIteration
         except StopIteration:
             pass
+
+        # save all the ips we found along the way
+        # in details._ipaddresses as a list
+        if all_ips:
+            if not getValueByPath(message, "details._ipaddresses"):
+                message.details._ipaddresses = all_ips
+            else:
+                if isinstance(message.details._ipaddresses, list):
+                    for ip in all_ips:
+                        if ip not in message.details._ipaddresses:
+                            message.details._ipaddresses.append(ip)
 
         return (message, metadata)
