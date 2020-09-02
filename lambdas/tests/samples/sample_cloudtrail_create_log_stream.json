@@ -1,0 +1,49 @@
+{
+    "source": "cloudtrail",
+    "tags": [],
+    "details": {
+        "apiversion": "20140328",
+        "eventtype": "AwsApiCall",
+        "recipientaccountid": "123456789012",
+        "responseelements": null,
+        "requestparameters": {
+            "loggroupname": "/aws/lambda/some_lambda",
+            "logstreamname": "2019/09/04/[$LATEST]1759dcd0266b4e28a55147e10c28e984"
+        },
+        "eventid": "2163d086-baa4-4203-a267-97b3a872c651",
+        "eventsource": "logs.amazonaws.com",
+        "useragent": "awslambda-worker",
+        "eventname": "CreateLogStream",
+        "eventversion": "1.05",
+        "sourceipaddress": "54.21.12.27",
+        "requestid": "0fb46c32-fd7c-4121-8eb7-7fa10670bc4b",
+        "useridentity": {
+            "type": "AssumedRole",
+            "principalid": "AROAIQ45SXVRIH72NM:some_lambda",
+            "arn": "arn:aws:sts::123456789012:assumed-role/some_lambda-us-west-2-lambdaRole/some_lambda",
+            "accountid": "123456789012",
+            "accesskeyid": "AROAIQ45SXVRIH72NM",
+            "sessioncontext": {
+                "attributes": {
+                    "mfaauthenticated": "false",
+                    "creationdate": "2019-09-04T17:01:34Z"
+                },
+                "sessionissuer": {
+                    "type": "Role",
+                    "principalid": "AROAIQ45SXVRIH72NM",
+                    "arn": "arn:aws:iam::123456789012:role/some_lambda-us-west-2-lambdaRole",
+                    "accountid": "123456789012",
+                    "username": "some_lambda-us-west-2-lambdaRole"
+                }
+            }
+        },
+        "lambda_details": {
+            "function_version": "$LATEST",
+            "function_arn": "arn:aws:lambda:us-west-2:123456789012:function:some_lambda",
+            "function_name": "some_lambda",
+            "memory_size": "1024"
+        },
+        "awsregion": "us-west-2",
+        "eventtime": "2019-09-04T17:54:59Z"
+    }
+}
