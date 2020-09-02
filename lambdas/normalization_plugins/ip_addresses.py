@@ -28,13 +28,14 @@ class message(object):
             "source_ip",
             "sourceipaddress",
             "source_ip_address",
+            "c-ip",
         ]
         for field in likely_fields:
             if field in message_keys:
                 # do we already have one?
-                if not getValueByPath(message, "details.source_ip_address"):
+                if not getValueByPath(message, "details.sourceipaddress"):
                     source_ips = list(find_keys(message, field))
                     if source_ips and is_ip(source_ips[0]):
-                        message.details.source_ip_address = source_ips[0]
+                        message.details.sourceipaddress = source_ips[0]
 
         return (message, metadata)
