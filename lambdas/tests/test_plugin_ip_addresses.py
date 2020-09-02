@@ -20,51 +20,61 @@ class TestPluginIpAddresses(object):
         from normalization_plugins.ip_addresses import message
 
         self.plugin = message()
+        self.inbound_events = []
+        self.normalized_events = []
         with open(
             "./lambdas/tests/samples/sample_cloudtrail_create_log_stream.json", "r"
         ) as f:
-            self.inbound_event = json.loads(f.read())
+            self.inbound_events.append(json.loads(f.read()))
+        with open(
+            "./lambdas/tests/samples/sample_cloudfront_wordpress_probe.json", "r"
+        ) as f:
+            self.inbound_events.append(json.loads(f.read()))
         # run the event through default plugins
         # to set the shell and lowercase all keys
         from normalization_plugins.event_shell import message as event_shell
         from normalization_plugins.lowercase_keys import message as lowercase_keys
 
         metadata = {"something": "else"}
-        event = self.inbound_event
-        event, metadata = event_shell().onMessage(event, metadata)
-        event, metadata = lowercase_keys().onMessage(event, metadata)
-        self.normalized_event = event
+        for event in self.inbound_events:
+            event, metadata = event_shell().onMessage(event, metadata)
+            event, metadata = lowercase_keys().onMessage(event, metadata)
+            self.normalized_events.append(event)
 
     def test_nochange(self):
         metadata = {"something": "else"}
-        # use the native raw event
-        event = self.inbound_event
-        # trip off the sourceipaddress field
-        # so the plugin doesn't change anything
-        del event["details"]["sourceipaddress"]
+        # use a native raw event
+        event = self.inbound_events[0]
         result, metadata = self.plugin.onMessage(event, metadata)
         # in = out - plugin didn't modify it
         # since it doesn't match the normalized format
+        # and won't find an ip field under 'details'
         assert result == event
 
     def test_structure(self):
         metadata = {"something": "else"}
         # use the normalized event
-        event = self.normalized_event
-        result, metadata = self.plugin.onMessage(event, metadata)
-        assert "utctimestamp" in result
-        assert "severity" in result
-        assert "summary" in result
-        assert "category" in result
-        assert "source" in result
-        assert "tags" in result
-        assert "plugins" in result
-        assert "details" in result
+        for event in self.normalized_events:
+            result, metadata = self.plugin.onMessage(event, metadata)
+            assert "utctimestamp" in result
+            assert "severity" in result
+            assert "summary" in result
+            assert "category" in result
+            assert "source" in result
+            assert "tags" in result
+            assert "plugins" in result
+            assert "details" in result
 
     def test_values(self):
         metadata = {"something": "else"}
-        # use the normalized event
-        event = self.normalized_event
+        # use normalized events
+        # we know the end result for
+        event = self.normalized_events[0]
         result, metadata = self.plugin.onMessage(event, metadata)
         logger.info(result)
         assert result["details"]["sourceipaddress"] == "54.21.12.27"
+
+        event = self.normalized_events[1]
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.info(result)
+        assert result["details"]["sourceipaddress"] == "139.59.66.23"
