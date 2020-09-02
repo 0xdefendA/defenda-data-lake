@@ -84,9 +84,7 @@ class message(object):
                         destination_ips = list(find_keys(message, field))
                         for ip in destination_ips:
                             if is_ip(ip):
-                                message.details.destinationipaddress = destination_ips[
-                                    0
-                                ]
+                                message.details.destinationipaddress = ip
                                 # first one wins
                                 # raise an error to break both for loops
                                 raise StopIteration
