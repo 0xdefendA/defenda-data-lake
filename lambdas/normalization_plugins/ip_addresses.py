@@ -41,6 +41,8 @@ class message(object):
             "ip_address",
             "ipaddr",
             "id_orig_h",
+            "x-forwarded-for",
+            "http-x-forwarded-for",
         ]
 
         likely_destination_fields = [
@@ -67,6 +69,10 @@ class message(object):
                         # a list since it could appear multiple times
                         source_ips = list(find_keys(message, field))
                         for ip in source_ips:
+                            if "," in ip:
+                                # some fields like x-forwarded can include multiple IPs
+                                # get the first one
+                                ip = ip.split(",")[0].strip()
                             if is_ip(ip):
                                 message.details.sourceipaddress = ip
                                 all_ips.append(ip)
