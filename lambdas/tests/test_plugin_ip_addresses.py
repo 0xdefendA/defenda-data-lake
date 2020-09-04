@@ -118,3 +118,10 @@ class TestPluginIpAddresses(object):
         logger.debug(result)
         assert result["details"]["c-ip"] == "1"
         assert result["details"].get("sourceipaddress", None) == None
+
+        event = self.normalized_events[2]
+        event["details"]["srcaddr"] = "1320.2555.2555.2555"
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.debug(result)
+        assert result["details"]["srcaddr"] == "1320.2555.2555.2555"
+        assert result["details"].get("sourceipaddress", None) == None
