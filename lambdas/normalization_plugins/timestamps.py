@@ -39,6 +39,16 @@ class message(object):
             for field in likely_timestamp_fields:
                 if field in message_keys:
                     timestamps = list(find_keys(message, field))
+                    if field == "time":
+                        # it may not have the date, sometimes in a separate field
+                        dates = list(find_keys(message, "date"))
+                        if dates:
+                            i = 0
+                            while i < len(timestamps):
+                                if dates[i]:
+                                    timestamps[i] = f"{dates[i]} {timestamps[i]}"
+                                i = i + 1
+
                     for timestamp in timestamps:
                         try:
                             utctimestamp = toUTC(timestamp)
