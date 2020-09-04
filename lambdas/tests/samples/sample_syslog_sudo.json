@@ -1,0 +1,16 @@
+{
+    "category": "monitoring",
+    "severity": "INFO",
+    "utctimestamp": "2014-04-17T06:10:54+00:00",
+    "summary": "  nagios : TTY=unknown ; PWD=/ ; USER=root ; COMMAND=/usr/lib64/nagios/plugins/custom/check_auditd.sh\n",
+    "source": "syslog",
+    "tags": [
+        "sample"
+    ],
+    "details": {
+        "processid": "123",
+        "program": "sudo",
+        "hostname": "something.example.com",
+        "timestamp": "Apr 17 06:10:54"
+    }
+}
