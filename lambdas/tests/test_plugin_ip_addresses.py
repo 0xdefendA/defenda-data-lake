@@ -84,16 +84,37 @@ class TestPluginIpAddresses(object):
         # we know the end result for
         event = self.normalized_events[0]
         result, metadata = self.plugin.onMessage(event, metadata)
-        logger.info(result)
+        logger.debug(result)
         assert result["details"]["sourceipaddress"] == "54.21.12.27"
 
         event = self.normalized_events[1]
         result, metadata = self.plugin.onMessage(event, metadata)
-        logger.info(result)
+        logger.debug(result)
         assert result["details"]["sourceipaddress"] == "139.59.66.23"
 
         event = self.normalized_events[2]
         result, metadata = self.plugin.onMessage(event, metadata)
-        logger.info(result)
+        logger.debug(result)
         assert result["details"]["sourceipaddress"] == "198.51.100.1"
         assert result["details"]["destinationipaddress"] == "192.0.2.1"
+
+    def test_invalid_ip_values(self):
+        """
+        purposefully invalidate IP addresses in ip address fields
+        and make sure the plugin doesn't accept them
+        """
+        metadata = {"something": "else"}
+        # use normalized events
+        # we know the end result for
+        event = self.normalized_events[0]
+        event["details"]["sourceipaddress"] = "nada"
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.debug(result)
+        assert result["details"]["sourceipaddress"] == "nada"
+
+        event = self.normalized_events[1]
+        event["details"]["c-ip"] = "1"
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.debug(result)
+        assert result["details"]["c-ip"] == "1"
+        assert result["details"].get("sourceipaddress", None) == None
