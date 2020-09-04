@@ -33,6 +33,7 @@ class message(object):
             "sourceipaddress",
             "source_ip_address",
             "c-ip",
+            "clientip",
             "remoteip",
             "remote_ip",
             "remoteaddr",
@@ -57,6 +58,7 @@ class message(object):
             "destinationipaddress",
             "destination_ip_address",
             "id_resp_h",
+            "serverip",
         ]
         # lets find a source
         # first match wins
