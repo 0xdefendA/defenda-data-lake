@@ -61,7 +61,7 @@ class TestPluginGsuiteLogins(object):
         # use the normalized event
         event = self.normalized_event
         result, metadata = self.plugin.onMessage(event, metadata)
-        logger.info(result)
+        logger.debug(result)
         assert (
             result["summary"]
             == "someone@somewhere.com login_success from IP 123.456.253.226"
