@@ -6,6 +6,8 @@ import logging, logging.config
 from pathlib import Path
 from utils.dotdict import DotDict
 from utils.dates import toUTC
+import tzlocal
+import os
 
 logging_config_file_path = Path(__file__).parent.joinpath("logging_config.yml")
 with open(logging_config_file_path, "r") as fd:
@@ -13,6 +15,9 @@ with open(logging_config_file_path, "r") as fd:
     logging.config.dictConfig(logging_config)
 global logger
 logger = logging.getLogger()
+
+os.environ["TZ"] = "UTC"
+logger.info(f"using timezone {tzlocal.get_localzone()}")
 
 
 class TestPluginTimestamps(object):
@@ -45,6 +50,7 @@ class TestPluginTimestamps(object):
             self.normalized_events.append(event)
 
     def test_nochange(self):
+
         metadata = {"something": "else"}
         event = {}
         # use an event without an ip
@@ -64,3 +70,40 @@ class TestPluginTimestamps(object):
         del result["details"]["_utcprocessedtimestamp"]
 
         assert result == event
+
+    def test_structure(self):
+        metadata = {"something": "else"}
+        # use the normalized event
+        for event in self.normalized_events:
+            result, metadata = self.plugin.onMessage(event, metadata)
+            assert "severity" in result
+            assert "summary" in result
+            assert "category" in result
+            assert "source" in result
+            assert "tags" in result
+            assert "plugins" in result
+            assert "details" in result
+            # we should have these valid timestamps
+            assert "utctimestamp" in result
+            assert "_utcprocessedtimestamp" in result["details"]
+
+    def test_values(self):
+        metadata = {"something": "else"}
+        # use normalized events
+        # we know the end result for
+        event = self.normalized_events[0]
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.debug(result)
+        assert result["utctimestamp"] == "2019-09-04T17:54:59+00:00"
+        assert result["details"]["_utcprocessedtimestamp"]
+
+        event = self.normalized_events[1]
+        result, metadata = self.plugin.onMessage(event, metadata)
+        assert result["utctimestamp"] == "2020-09-01T17:48:18+00:00"
+        assert result["details"]["_utcprocessedtimestamp"]
+
+        event = self.normalized_events[2]
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.info(result)
+        assert result["utctimestamp"] == "2014-12-14T04:06:50+00:00"
+        assert result["details"]["_utcprocessedtimestamp"]
