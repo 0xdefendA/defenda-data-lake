@@ -107,3 +107,29 @@ class TestPluginTimestamps(object):
         logger.info(result)
         assert result["utctimestamp"] == "2014-12-14T04:06:50+00:00"
         assert result["details"]["_utcprocessedtimestamp"]
+
+    def test_invalid_date_values(self):
+        """
+        purposefully invalidate dates in date fields
+        and make sure the plugin doesn't accept them
+        """
+        metadata = {"something": "else"}
+        # use normalized events
+        # we know the end result for
+        event = self.normalized_events[0]
+        event["details"]["eventtime"] = "nada"
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.debug(result)
+        assert result["details"]["eventtime"] == "nada"
+
+        event = self.normalized_events[1]
+        event["details"]["time"] = "nada"
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.debug(result)
+        assert result["details"]["time"] == "nada"
+
+        event = self.normalized_events[2]
+        event["details"]["start"] = "nada"
+        result, metadata = self.plugin.onMessage(event, metadata)
+        logger.info(result)
+        assert result["details"]["start"] == "nada"
