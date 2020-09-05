@@ -39,17 +39,19 @@ class message(object):
             for field in likely_timestamp_fields:
                 if field in message_keys:
                     timestamps = list(find_keys(message, field))
-                    if field == "time":
-                        # it may not have the date, sometimes in a separate field
+                    if field == "time" and "date" in message_keys:
+                        # combine date and time for a timestamp
                         dates = list(find_keys(message, "date"))
-                        if dates:
-                            i = 0
-                            while i < len(timestamps):
-                                if dates[i]:
-                                    timestamps[i] = f"{dates[i]} {timestamps[i]}"
-                                i = i + 1
+                        i = 0
+                        while i < len(timestamps):
+                            try:
+                                timestamps[i] = f"{dates[i]} {timestamps[i]}"
+                            except IndexError:
+                                break
+                            i = i + 1
 
                     for timestamp in timestamps:
+                        utctimestamp = ""
                         try:
                             utctimestamp = toUTC(timestamp)
                         except Exception as e:
