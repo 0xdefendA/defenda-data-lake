@@ -9,10 +9,10 @@ logger = logging.getLogger()
 
 
 def event_criteria_values(an_event):
-    """ set up the list of event values to use when comparing plugins
-        to this event to see if they should fire
-        target values are the .keys() of the dict and the values of the 'category' and 'tags' fields
-        where category is a key/value and tags is a list of values.
+    """set up the list of event values to use when comparing plugins
+    to this event to see if they should fire
+    target values are the .keys() of the dict and the values of the 'category' and 'tags' fields
+    where category is a key/value and tags is a list of values.
     """
     criteria_values = [e for e in enum_keys(an_event)]
     if (
@@ -30,8 +30,8 @@ def event_criteria_values(an_event):
 
 def register_plugins(directory_name):
     """
-        take a directory name, scan it for python modules
-        and register them (module,registration criteria, priority)
+    take a directory name, scan it for python modules
+    and register them (module,registration criteria, priority)
     """
     pluginList = list()  # tuple of module,registration dict,priority
     if os.path.exists(directory_name):
@@ -60,11 +60,11 @@ def register_plugins(directory_name):
 
 def send_event_to_plugins(anevent, metadata, pluginList):
     """compare the event to the plugin registrations.
-       plugins register with a list of keys or values
-       or values they want to match on
-       this function compares that registration list
-       to the current event and sends the event to plugins
-       in order
+    plugins register with a list of keys or values
+    or values they want to match on
+    this function compares that registration list
+    to the current event and sends the event to plugins
+    in order
     """
     if not isinstance(anevent, dict):
         raise TypeError("event is type {0}, should be a dict".format(type(anevent)))
@@ -77,7 +77,7 @@ def send_event_to_plugins(anevent, metadata, pluginList):
         send = False
         if isinstance(plugin[1], list):
             try:
-                if "*" in plugin_matching_keys:
+                if "*" in plugin[1]:
                     # plugin wants to see all events, early exit the check
                     send = True
                 else:
