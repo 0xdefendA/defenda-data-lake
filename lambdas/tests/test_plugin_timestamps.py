@@ -65,8 +65,12 @@ class TestPluginTimestamps(object):
         del event["details"]["timestamp"]
         result, metadata = self.plugin.onMessage(event, metadata)
         # the plugin adds a metadata field
-        # remove it for the assertion test
+        # assert that it worked
+        assert result["details"]["_utcprocessedtimestamp"]
+
+        # next, remove it for the
         # in = out - plugin didn't modify it
+        # test
         del result["details"]["_utcprocessedtimestamp"]
 
         assert result == event
@@ -104,7 +108,7 @@ class TestPluginTimestamps(object):
 
         event = self.normalized_events[2]
         result, metadata = self.plugin.onMessage(event, metadata)
-        logger.info(result)
+        logger.debug(result)
         assert result["utctimestamp"] == "2014-12-14T04:06:50+00:00"
         assert result["details"]["_utcprocessedtimestamp"]
 
@@ -131,5 +135,5 @@ class TestPluginTimestamps(object):
         event = self.normalized_events[2]
         event["details"]["start"] = "nada"
         result, metadata = self.plugin.onMessage(event, metadata)
-        logger.info(result)
+        logger.debug(result)
         assert result["details"]["start"] == "nada"
