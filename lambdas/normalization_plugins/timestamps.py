@@ -42,13 +42,16 @@ class message(object):
                     if field == "time" and "date" in message_keys:
                         # combine date and time for a timestamp
                         dates = list(find_keys(message, "date"))
-                        i = 0
-                        while i < len(timestamps):
-                            try:
-                                timestamps[i] = f"{dates[i]} {timestamps[i]}"
-                            except IndexError:
-                                break
-                            i = i + 1
+                        if dates:
+                            # setup a new list for the zipped results
+                            date_timestamps = []
+                            for i in zip(dates, timestamps):
+                                date_timestamps.append(f"{i[0]} {i[1]}")
+
+                            if date_timestamps:
+                                # replace the original list
+                                # with this list of date + time
+                                timestamps = date_timestamps
 
                     for timestamp in timestamps:
                         utctimestamp = ""
