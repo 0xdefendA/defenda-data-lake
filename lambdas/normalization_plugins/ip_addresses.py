@@ -85,8 +85,17 @@ class message(object):
 
         # harvest the result or existing source ip
         source_ip_address = getValueByPath(message, "details.sourceipaddress")
-        if source_ip_address and is_ip(source_ip_address):
-            all_ips.append(source_ip_address)
+        if source_ip_address:
+            if is_ip(source_ip_address):
+                all_ips.append(source_ip_address)
+            else:
+                # hrm, there's an entry here that's not an ip
+                # sometimes cloudtrail does this (config.amazonaws.com )
+                # and also sets a useragent field to the same
+                if getValueByPath(message, "details.sourceipaddress") == getValueByPath(
+                    message, "details.useragent"
+                ):
+                    del message.details.sourceipaddress
 
         # lets find a destination
         # first match wins
