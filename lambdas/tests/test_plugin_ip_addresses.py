@@ -86,17 +86,21 @@ class TestPluginIpAddresses(object):
         result, metadata = self.plugin.onMessage(event, metadata)
         logger.debug(result)
         assert result["details"]["sourceipaddress"] == "54.21.12.27"
+        assert "54.21.12.27" in result["details"]["_ipaddresses"]
 
         event = self.normalized_events[1]
         result, metadata = self.plugin.onMessage(event, metadata)
         logger.debug(result)
         assert result["details"]["sourceipaddress"] == "139.59.66.23"
+        assert "139.59.66.23" in result["details"]["_ipaddresses"]
 
         event = self.normalized_events[2]
         result, metadata = self.plugin.onMessage(event, metadata)
         logger.debug(result)
         assert result["details"]["sourceipaddress"] == "198.51.100.1"
         assert result["details"]["destinationipaddress"] == "192.0.2.1"
+        assert "192.0.2.1" in result["details"]["_ipaddresses"]
+        assert "198.51.100.1" in result["details"]["_ipaddresses"]
 
     def test_invalid_ip_values(self):
         """
@@ -111,6 +115,7 @@ class TestPluginIpAddresses(object):
         result, metadata = self.plugin.onMessage(event, metadata)
         logger.debug(result)
         assert result["details"]["sourceipaddress"] == "nada"
+        assert "_ipaddresses" not in result["details"]
 
         event = self.normalized_events[1]
         event["details"]["c-ip"] = "1"
@@ -118,6 +123,7 @@ class TestPluginIpAddresses(object):
         logger.debug(result)
         assert result["details"]["c-ip"] == "1"
         assert result["details"].get("sourceipaddress", None) == None
+        assert "_ipaddresses" not in result["details"]
 
         event = self.normalized_events[2]
         event["details"]["srcaddr"] = "1320.2555.2555.2555"
@@ -125,3 +131,4 @@ class TestPluginIpAddresses(object):
         logger.debug(result)
         assert result["details"]["srcaddr"] == "1320.2555.2555.2555"
         assert result["details"].get("sourceipaddress", None) == None
+        assert "192.0.2.1" in result["details"]["_ipaddresses"]

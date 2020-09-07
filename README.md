@@ -115,6 +115,75 @@ The date portion of the where clause allows us to hone in on a particular time p
 
 Queries can be any valid [Presto SQL](https://prestodb.io/docs/current/sql/select.html) including [functions](https://prestodb.io/docs/current/functions.html)
 
+
+Here's another, slightly more complex query taking advantage of the work the ip_addresses.py plugin does to gather all the ips it's seen into a list. We can use that to query for any events involving a suspect ip like so:
+
+```sql
+SELECT
+    utctimestamp,
+    summary,
+    source,
+    details,
+    tags
+FROM defenda_data_lake.events
+    where
+        source ='cloudtrail'
+    AND json_array_contains(json_extract(details,'$._ipaddresses'),'7.1.14.12')
+    AND year='2020'
+    AND month='09'
+    AND day='07'
+    AND hour='18'
+    LIMIT 100;
+```
+
+The plugin searches events for likely IP fields, verifies them, normalizes source/destination IPs and then appends them to a metadata list details._ipaddresses. We can query that json natively by extracting it from the details athena field and use the Presto function json_array_contains to narrow our query to the IP address in question.
+
+### Python querying
+Thanks to the [pyathena library](https://pypi.org/project/PyAthena/) and [pandas](https://pandas.pydata.org/), querying and exploring data is easy!
+
+Here's the same sample query looking for IP address events, but performed from a python environment.
+
+```python
+from pyathena import connect
+from pyathena.util import as_pandas
+from pyathena.pandas_cursor import PandasCursor
+import pandas as pd
+
+cursor = connect(work_group='defenda_data_lake',region_name='us-west-2',cursor_class=PandasCursor).cursor()
+
+cursor.execute("""
+SELECT
+    utctimestamp,
+    summary,
+    source,
+    details,
+    tags
+FROM defenda_data_lake.events
+    where
+        source ='cloudtrail'
+    AND json_array_contains(json_extract(details,'$._ipaddresses'),'7.1.14.12')
+    AND year='2020'
+    AND month='09'
+    AND day='07'
+    AND hour='18'
+    LIMIT 100;
+               """)
+df = as_pandas(cursor)
+df.head()
+
+```
+
+You simply create a cursor to handle your results, send it a query and your result is a pandas data frame.
+
+If you'd like your query results restored to a list of python dictionaries you can convert the JSON in the details field like so:
+
+```python
+query_results=[]
+for message in df.to_dict('records'):
+    message['details']=json.loads(message['details'])
+    query_results.append(message)
+```
+
 ### Advantages
 
 #### Serverless!

@@ -77,12 +77,25 @@ class message(object):
                                 ip = ip.split(",")[0].strip()
                             if is_ip(ip):
                                 message.details.sourceipaddress = ip
-                                all_ips.append(ip)
                                 # first one wins
                                 # raise an error to break both for loops
                                 raise StopIteration
         except StopIteration:
             pass
+
+        # harvest the result or existing source ip
+        source_ip_address = getValueByPath(message, "details.sourceipaddress")
+        if source_ip_address:
+            if is_ip(source_ip_address):
+                all_ips.append(source_ip_address)
+            else:
+                # hrm, there's an entry here that's not an ip
+                # sometimes cloudtrail does this (config.amazonaws.com )
+                # and also sets a useragent field to the same
+                if getValueByPath(message, "details.sourceipaddress") == getValueByPath(
+                    message, "details.useragent"
+                ):
+                    del message.details.sourceipaddress
 
         # lets find a destination
         # first match wins
@@ -97,12 +110,16 @@ class message(object):
                         for ip in destination_ips:
                             if is_ip(ip):
                                 message.details.destinationipaddress = ip
-                                all_ips.append(ip)
                                 # first one wins
                                 # raise an error to break both for loops
                                 raise StopIteration
         except StopIteration:
             pass
+
+        # harvest the result or existing destination ip
+        destination_ip_address = getValueByPath(message, "details.destinationipaddress")
+        if destination_ip_address and is_ip(destination_ip_address):
+            all_ips.append(destination_ip_address)
 
         # save all the ips we found along the way
         # in details._ipaddresses as a list
