@@ -22,8 +22,13 @@ def get_lambda_zip():
     docker_client.containers.run(
         "datalake-lambdas",
         "cp /asset-output/lambda.zip /mnt/cdk-data-lake/lambdas",
-        volumes={path.abspath("."): {"bind": "/mnt/cdk-data-lake", "mode": "rw",}},
-        auto_remove=True,
+        volumes={
+            path.abspath("."): {
+                "bind": "/mnt/cdk-data-lake",
+                "mode": "rw",
+            }
+        },
+        remove=True,
     )
 
 
