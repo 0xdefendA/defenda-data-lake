@@ -22,6 +22,12 @@ Deployment is via python/[uv](https://docs.astral.sh/uv/), terraform and a mini-
 
 It uses us-west-2 as the default region, set a terraform.tfvars variable ( aws_region = "some-other-region ) if you'd like it elsewhere.
 
+You can either use docker desktop or [colima](https://github.com/abiosoft/colima) as your docker daemon.
+NOTE: If you use colima you will need to update the env variable so the docker python library can find the socket colima presents: 
+
+```bash
+export DOCKER_HOST=unix:///Users/<yourdirectory>/.colima/default/docker.sock
+```
 
 First get the code and set up the environment with [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
