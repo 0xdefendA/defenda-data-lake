@@ -1,6 +1,6 @@
 [project]
 name = "defenda-data-lake"
-version = "0.2.0"
+version = "2.0.0"
 description = "An AWS-native, serverless log management system for unstructured JSON ingestion, normalization, enrichment and Athena-based querying."
 readme = "README.md"
 license = "MPL-2.0"
