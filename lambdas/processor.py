@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import base64
 import json
 from json import JSONDecodeError
@@ -82,4 +80,3 @@ def lambda_handler(event, context):
         return {"records": output}
     else:
         logger.info(f"no records found in {event} with context: {context}")
-

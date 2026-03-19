@@ -1,15 +1,16 @@
 import math
-import pytz
 import tzlocal
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dateutil.parser import parse
 import logging
 
 logger = logging.getLogger()
 
+UTC = timezone.utc
+
 
 def get_date_parts():
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     last_hour_now = now - timedelta(hours=1)
 
     now_hour = str(now.hour).rjust(2, "0")
@@ -35,11 +36,7 @@ def get_date_parts():
 
 def toUTC(suspectedDate):
     """make a UTC date out of almost anything"""
-    utc = pytz.UTC
     objDate = None
-    # pick up any environment TZ changes
-    tzlocal.reload_localzone()
-
     LOCAL_TIMEZONE = tzlocal.get_localzone()
 
     if type(suspectedDate) == datetime:
@@ -76,22 +73,20 @@ def toUTC(suspectedDate):
             objDate = parse(suspectedDate, fuzzy=True)
     try:
         if objDate.tzinfo is None:
-            objDate = LOCAL_TIMEZONE.localize(objDate)
+            # Attach local timezone to naive datetimes
+            objDate = objDate.replace(tzinfo=LOCAL_TIMEZONE)
     except AttributeError as e:
         raise ValueError(
             "Date %s which was converted to %s has no "
             "tzinfo attribute : %s" % (suspectedDate, objDate, e)
         )
 
-    objDate = utc.normalize(objDate)
+    # Convert to UTC
+    objDate = objDate.astimezone(UTC)
 
     return objDate
 
 
 def utcnow():
-    """python is silly and returns naive datetime
-    when datetime.utcnow() is called
-    But if you call now with a UTC timezone
-    it returns a non naive datetime
-    """
-    return datetime.now(pytz.UTC)
+    """Return a timezone-aware UTC datetime"""
+    return datetime.now(UTC)

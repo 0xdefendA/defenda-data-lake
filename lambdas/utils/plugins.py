@@ -1,5 +1,6 @@
-import pynsive
+import importlib
 import os
+from pathlib import Path
 from operator import itemgetter
 import json
 import logging
@@ -31,27 +32,29 @@ def event_criteria_values(an_event):
 def register_plugins(directory_name):
     """
     take a directory name, scan it for python modules
-    and register them (module,registration criteria, priority)
+    and register them (module, registration criteria, priority)
     """
-    pluginList = list()  # tuple of module,registration dict,priority
-    if os.path.exists(directory_name):
-        modules = pynsive.list_modules(directory_name)
-        for mname in modules:
-            module = pynsive.import_module(mname)
+    pluginList = list()  # tuple of module, registration dict, priority
+    plugin_dir = Path(directory_name)
+    if plugin_dir.exists():
+        for plugin_file in sorted(plugin_dir.glob("*.py")):
+            if plugin_file.name == "__init__.py":
+                continue
+            # Convert path to module name:
+            # "normalization_plugins/event_shell.py" → "normalization_plugins.event_shell"
+            module_name = f"{directory_name}.{plugin_file.stem}"
+            module = importlib.import_module(module_name)
             if not module:
-                raise ImportError("Unable to load module {}".format(mname))
+                raise ImportError("Unable to load module {}".format(module_name))
             else:
                 if "message" in dir(module):
                     mclass = module.message()
                     mreg = mclass.registration
-                    if "priority" in dir(mclass):
-                        mpriority = mclass.priority
-                    else:
-                        mpriority = 100
+                    mpriority = getattr(mclass, "priority", 100)
                     if isinstance(mreg, list):
                         logger.info(
                             "[*] plugin {0} registered to receive messages with {1}".format(
-                                mname, mreg
+                                module_name, mreg
                             )
                         )
                         pluginList.append((mclass, mreg, mpriority))

@@ -138,3 +138,6 @@ terraform.tfstate*
 .terraform.lock.hcl
 .terraform*
 
+# uv
+.python-version
+

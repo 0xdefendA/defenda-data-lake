@@ -466,7 +466,7 @@ resource "aws_lambda_function" "data_lake_firehose_input" {
   function_name    = "defenda_data_lake_firehose_input"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "processor.lambda_handler"
-  runtime          = "python3.8"
+  runtime          = "python3.13"
   timeout          = 100
   source_code_hash = filesha256("lambdas/lambda.zip")
 }
@@ -476,7 +476,7 @@ resource "aws_lambda_function" "data_lake_s3_input" {
   function_name    = "defenda_data_lake_s3_input"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "s3_to_firehose.lambda_handler"
-  runtime          = "python3.8"
+  runtime          = "python3.13"
   timeout          = 100
   source_code_hash = filesha256("lambdas/lambda.zip")
 }
@@ -486,7 +486,7 @@ resource "aws_lambda_function" "data_lake_generate_partitions_lambda" {
   function_name    = "defenda_data_lake_generate_partitions"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "generate_partitions.lambda_handler"
-  runtime          = "python3.8"
+  runtime          = "python3.13"
   timeout          = 100
   source_code_hash = filesha256("lambdas/lambda.zip")
 }
