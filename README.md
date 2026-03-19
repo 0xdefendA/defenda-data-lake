@@ -232,7 +232,7 @@ To help, data is automatically partitioned in hour chunks (year/month/day/hour s
 
 ## Companion Projects
 
-Anything that sends json to firehost can be used as an input into the data lake. Here are some sample companion projects that do just that to send security events from some common data sources:
+Anything that sends json to firehose can be used as an input into the data lake. Here are some sample companion projects that do just that to send security events from some common data sources:
 
 - [gsuite log ingestion](https://github.com/jeffbryner/gsuite-activity-lambda)
 - [sophos log ingestion](https://github.com/jeffbryner/sophos-activity-lambda)
@@ -345,14 +345,14 @@ This plugin solves this via the use of the dict_match function like so:
 
 ```python
         #suspicious?
-        suspicious={"boolvalue":True,"name":"is_suspicious"}
+        suspicious={"boolValue":True,"name":"is_suspicious"}
         for e in dot_message.get("details.events",[]):
             for p in e.get("parameters",[]):
                 if dict_match(suspicious,p):
                     message["details"]["suspicious"]=True
 ```
 
-The dict_match function takes a dictionary of keys and values and compares it to something. If the keys and values match, it returns true which in this case allows to mark an event as suspicious if the name='is_suspicious' and a field called 'boolvalue' is True.
+The dict_match function takes a dictionary of keys and values and compares it to something. If the keys and values match, it returns true which in this case allows to mark an event as suspicious if the name='is_suspicious' and a field called 'boolValue' is True.
 
 Lastly the plugin returns the event and metadata back to the pipeline to be sent on to another plugin, or to the final data lake:
 
