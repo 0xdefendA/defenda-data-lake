@@ -3,3 +3,5 @@ cdk*
 .git
 *log
 __pycache__**
+lambda.zip
+tests

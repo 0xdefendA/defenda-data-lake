@@ -9,16 +9,26 @@ RUN mkdir /asset-input
 WORKDIR /asset-input
 ADD . .
 
-# Install dependencies into the output directory using uv
+# Install only the dependencies the lambdas actually need.
+# boto3/botocore/s3transfer/jmespath are provided by the Lambda runtime
+# so we exclude them to keep the zip small (~75MB savings from botocore alone).
+# pandas/numpy are NOT needed at lambda runtime.
 RUN uv pip install --no-cache \
-    boto3 \
     chevron \
+    fsspec \
     netaddr \
-    pandas \
-    pyathena \
     python-dateutil \
     pyyaml \
+    tenacity \
     tzlocal \
+    --target /asset-output
+
+# Install pyathena without deps to avoid pulling in pandas/numpy.
+# It only needs boto3 + fsspec + tenacity for the cursor pattern
+# used in generate_partitions.py — boto3 comes from the Lambda runtime,
+# fsspec and tenacity are installed above.
+RUN uv pip install --no-cache --no-deps \
+    pyathena \
     --target /asset-output
 
 # Copy source files to output
