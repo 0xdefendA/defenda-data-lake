@@ -1,0 +1,39 @@
+[project]
+name = "defenda-data-lake"
+version = "2.0.0"
+description = "An AWS-native, serverless log management system for unstructured JSON ingestion, normalization, enrichment and Athena-based querying."
+readme = "README.md"
+license = "MPL-2.0"
+requires-python = ">=3.13"
+dependencies = [
+    "boto3",
+    "chevron",
+    "netaddr",
+    "pandas",
+    "pyathena",
+    "python-dateutil",
+    "pyyaml",
+    "tzlocal",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+build = [
+    "docker",
+]
+
+[tool.pytest.ini_options]
+addopts = "-v -s -p no:cacheprovider"
+filterwarnings = [
+    "ignore:.*U.*is deprecated:DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

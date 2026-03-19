@@ -1,7 +1,3 @@
-import unittest
-from io import BytesIO
-from subprocess import PIPE, Popen
-from pkg_resources import parse_version
 import pytest
 import yaml
 from datetime import timezone

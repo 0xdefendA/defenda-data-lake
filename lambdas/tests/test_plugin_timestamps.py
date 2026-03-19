@@ -19,24 +19,22 @@ logger = logging.getLogger()
 os.environ["TZ"] = "UTC"
 logger.info(f"using timezone {tzlocal.get_localzone()}")
 
+SAMPLES_DIR = Path(__file__).parent / "samples"
+
 
 class TestPluginTimestamps(object):
-    def setup(self):
+    def setup_method(self):
         from normalization_plugins.timestamps import message
 
         self.plugin = message()
         self.inbound_events = []
         self.normalized_events = []
 
-        with open(
-            "./lambdas/tests/samples/sample_cloudtrail_create_log_stream.json", "r"
-        ) as f:
+        with open(SAMPLES_DIR / "sample_cloudtrail_create_log_stream.json", "r") as f:
             self.inbound_events.append(json.loads(f.read()))
-        with open(
-            "./lambdas/tests/samples/sample_cloudfront_wordpress_probe.json", "r"
-        ) as f:
+        with open(SAMPLES_DIR / "sample_cloudfront_wordpress_probe.json", "r") as f:
             self.inbound_events.append(json.loads(f.read()))
-        with open("./lambdas/tests/samples/sample_vpc_flow_log.json", "r") as f:
+        with open(SAMPLES_DIR / "sample_vpc_flow_log.json", "r") as f:
             self.inbound_events.append(json.loads(f.read()))
         # run the event through default plugins
         # to set the shell and lowercase all keys
@@ -55,7 +53,7 @@ class TestPluginTimestamps(object):
         event = {}
         # use an event without an ip
         # to test if the plugin is benign when it should not act
-        with open("./lambdas/tests/samples/sample_syslog_sudo.json", "r") as f:
+        with open(SAMPLES_DIR / "sample_syslog_sudo.json", "r") as f:
             event = json.loads(f.read())
         # make sure we have a valid, populated dict
         assert len(event.keys())

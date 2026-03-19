@@ -7,7 +7,7 @@ from utils.dates import toUTC
 
 
 class TestLowerCaseKeys(object):
-    def setup(self):
+    def setup_method(self):
         from normalization_plugins.lowercase_keys import message
 
         self.plugin = message()
@@ -41,7 +41,7 @@ class TestLowerCaseKeys(object):
 
 
 class TestEnsureEventID(object):
-    def setup(self):
+    def setup_method(self):
         from enrichment_plugins.ensure_eventid import message
 
         self.plugin = message()
@@ -56,7 +56,7 @@ class TestEnsureEventID(object):
 
 
 class TestEventShell(object):
-    def setup(self):
+    def setup_method(self):
         from normalization_plugins.event_shell import message
 
         self.plugin = message()

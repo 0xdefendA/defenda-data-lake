@@ -134,6 +134,11 @@ Pipfile.lock
 lambda.zip
 .DS_Store
 terraform.tfstate
-terraform.tfstate.backup
-.terraform/plugins/darwin_amd64/lock.json
-.terraform/plugins/darwin_amd64/terraform-provider-aws_v3.0.0_x5
+terraform.tfstate*
+.terraform.lock.hcl
+.terraform*
+
+# uv
+.python-version
+# Ignore CSV files that may be generated during testing or development
+*.csv

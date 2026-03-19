@@ -2,7 +2,7 @@
 An AWS-native, serverless log management system to allow you to ingest unstructured JSON, normalize & enrich it and store it in Athena for queries and analysis.
 
 **Build Status:**
-- Master [![Build Status](https://travis-ci.com/0xdefenda/defenda-data-lake.svg?branch=master) ](https://travis-ci.com/0xdefenda/defenda-data-lake)
+- Main [![CI](https://github.com/0xdefendA/defenda-data-lake/actions/workflows/ci.yml/badge.svg)](https://github.com/0xdefendA/defenda-data-lake/actions/workflows/ci.yml)
 
 ## Video intro
 Here's a brief video intro to the data lake.
@@ -18,22 +18,28 @@ This solution uses only serverless constructs to allow you to store unstructured
 
 ## Deployment:
 
-Deployment is via python/pipenv, terraform and a mini-docker environment to compile the lambdas.
+Deployment is via python/[uv](https://docs.astral.sh/uv/), terraform and a mini-docker environment to compile the lambdas.
 
 It uses us-west-2 as the default region, set a terraform.tfvars variable ( aws_region = "some-other-region ) if you'd like it elsewhere.
 
+You can either use docker desktop or [colima](https://github.com/abiosoft/colima) as your docker daemon.
+NOTE: If you use colima you will need to update the env variable so the docker python library can find the socket colima presents: 
 
-First get the code and initiate pipenv (or [install it if you aren't converted yet](https://pipenv.pypa.io/en/latest/install/)):
+```bash
+export DOCKER_HOST=unix:///Users/<yourdirectory>/.colima/default/docker.sock
+```
+
+First get the code and set up the environment with [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
 ```bash
 git clone <this repo> .
-pipenv --python 3.8
+uv sync
 ```
 
 Now build the lambdas:
 
 ```bash
-./generate_lambda_zip.py
+uv run python generate_lambda_zip.py
 ```
 
 Init and run terraform

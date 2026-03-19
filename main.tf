@@ -1,7 +1,9 @@
 terraform {
-  required_version = ">=0.12.25"
   required_providers {
-    aws = ">= 2.25.0"
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
   }
 }
 
@@ -13,7 +15,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 output "account_id" {
-  value = "${data.aws_caller_identity.current.account_id}"
+  value = data.aws_caller_identity.current.account_id
 }
 
 output "datalake_arn" {
@@ -22,14 +24,15 @@ output "datalake_arn" {
 
 resource "aws_s3_bucket" "data_lake_input_bucket" {
   bucket = "${data.aws_caller_identity.current.account_id}-defenda-data-lake-input-bucket"
-  acl    = "private"
+}
 
-  versioning {
-    enabled = false
-  }
+resource "aws_s3_bucket_lifecycle_configuration" "data_lake_input_bucket_lifecycle" {
+  bucket = aws_s3_bucket.data_lake_input_bucket.id
 
-  lifecycle_rule {
-    enabled = true
+
+  rule {
+    id     = "transition-to-ia-and-expire"
+    status = "Enabled"
 
     transition {
       days          = 30
@@ -53,14 +56,15 @@ resource "aws_s3_bucket_public_access_block" "data_lake_input_bucket" {
 
 resource "aws_s3_bucket" "data_lake_output_bucket" {
   bucket = "${data.aws_caller_identity.current.account_id}-defenda-data-lake-output-bucket"
-  acl    = "private"
+}
 
-  versioning {
-    enabled = false
-  }
+resource "aws_s3_bucket_lifecycle_configuration" "data_lake_output_bucket_lifecycle" {
+  bucket = aws_s3_bucket.data_lake_output_bucket.id
 
-  lifecycle_rule {
-    enabled = true
+  rule {
+    id     = "transition-to-ia-and-expire"
+    status = "Enabled"
+
 
     transition {
       days          = 90
@@ -68,7 +72,7 @@ resource "aws_s3_bucket" "data_lake_output_bucket" {
     }
 
     expiration {
-      days = 360
+      days = 450
     }
   }
 }
@@ -137,7 +141,7 @@ resource "aws_iam_role_policy" "data-lake-firehose-policy" {
           "logs:PutLogEvents"
       ],
       "Resource": [
-          "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kinesisfirehose/data-lake-firehose-logging:log-stream:*"
+          "arn:aws:logs:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/kinesisfirehose/data-lake-firehose-logging:log-stream:*"
       ]
     },
     {
@@ -148,7 +152,7 @@ resource "aws_iam_role_policy" "data-lake-firehose-policy" {
           "kinesis:GetShardIterator",
           "kinesis:GetRecords"
       ],
-      "Resource": "arn:aws:kinesis:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:stream/data-lake-firehose-logging"
+      "Resource": "arn:aws:kinesis:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:stream/data-lake-firehose-logging"
     }
   ]
 }
@@ -159,15 +163,14 @@ EOF
 
 
 resource "aws_s3_bucket" "data_lake_athena_bucket" {
-  bucket = "${data.aws_caller_identity.current.account_id}-defenda-data-lake-athena-query-results-${data.aws_region.current.name}"
-  acl    = "private"
+  bucket = "${data.aws_caller_identity.current.account_id}-defenda-data-lake-athena-query-results-${data.aws_region.current.region}"
+}
 
-  versioning {
-    enabled = false
-  }
-
-  lifecycle_rule {
-    enabled = true
+resource "aws_s3_bucket_lifecycle_configuration" "data_lake_athena_bucket_lifecycle" {
+  bucket = aws_s3_bucket.data_lake_athena_bucket.id
+  rule {
+    id     = "expire-athena-query-results"
+    status = "Enabled"
 
     expiration {
       days = 30
@@ -463,7 +466,7 @@ resource "aws_lambda_function" "data_lake_firehose_input" {
   function_name    = "defenda_data_lake_firehose_input"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "processor.lambda_handler"
-  runtime          = "python3.8"
+  runtime          = "python3.13"
   timeout          = 100
   source_code_hash = filesha256("lambdas/lambda.zip")
 }
@@ -473,7 +476,7 @@ resource "aws_lambda_function" "data_lake_s3_input" {
   function_name    = "defenda_data_lake_s3_input"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "s3_to_firehose.lambda_handler"
-  runtime          = "python3.8"
+  runtime          = "python3.13"
   timeout          = 100
   source_code_hash = filesha256("lambdas/lambda.zip")
 }
@@ -483,7 +486,7 @@ resource "aws_lambda_function" "data_lake_generate_partitions_lambda" {
   function_name    = "defenda_data_lake_generate_partitions"
   role             = aws_iam_role.data_lake_lambda_role.arn
   handler          = "generate_partitions.lambda_handler"
-  runtime          = "python3.8"
+  runtime          = "python3.13"
   timeout          = 100
   source_code_hash = filesha256("lambdas/lambda.zip")
 }
@@ -613,8 +616,8 @@ resource "aws_kinesis_firehose_delivery_stream" "data_lake_s3_stream" {
     role_arn            = aws_iam_role.data_lake_firehose_role.arn
     bucket_arn          = aws_s3_bucket.data_lake_output_bucket.arn
     compression_format  = "GZIP"
-    buffer_interval     = 60
-    buffer_size         = 1
+    buffering_interval  = 30 #seconds
+    buffering_size      = 1  #MBs 1 is lowest
     error_output_prefix = "errors"
 
     processing_configuration {

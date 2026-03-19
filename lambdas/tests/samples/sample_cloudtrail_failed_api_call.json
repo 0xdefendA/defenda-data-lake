@@ -1,0 +1,28 @@
+{
+    "source": "cloudtrail",
+    "tags": [],
+    "details": {
+        "eventcategory": "Management",
+        "eventname": "DescribeInstances",
+        "eventtime": "2026-03-01T10:00:00Z",
+        "awsregion": "eu-west-1",
+        "eventtype": "AwsApiCall",
+        "managementevent": true,
+        "eventsource": "ec2.amazonaws.com",
+        "eventid": "fail1234-5678-9abc-def0-123456789abc",
+        "recipientaccountid": "123456789012",
+        "eventversion": "1.08",
+        "errorcode": "UnauthorizedAccess",
+        "errormessage": "User is not authorized to perform ec2:DescribeInstances",
+        "responseelements": null,
+        "requestparameters": {},
+        "sourceipaddress": "198.51.100.10",
+        "useridentity": {
+            "type": "AssumedRole",
+            "principalid": "AROAEXAMPLE:session-user",
+            "arn": "arn:aws:sts::123456789012:assumed-role/ReadOnlyRole/session-user",
+            "accountid": "123456789012"
+        },
+        "readonly": true
+    }
+}

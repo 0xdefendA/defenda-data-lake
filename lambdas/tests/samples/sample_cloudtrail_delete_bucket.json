@@ -1,0 +1,29 @@
+{
+    "source": "cloudtrail",
+    "tags": [],
+    "details": {
+        "eventcategory": "Management",
+        "eventname": "DeleteBucket",
+        "eventtime": "2026-03-01T12:00:00Z",
+        "awsregion": "us-west-2",
+        "eventtype": "AwsApiCall",
+        "managementevent": true,
+        "eventsource": "s3.amazonaws.com",
+        "eventid": "abc12345-def6-7890-abcd-ef1234567890",
+        "recipientaccountid": "123456789012",
+        "eventversion": "1.08",
+        "responseelements": null,
+        "requestparameters": {
+            "bucketname": "my-important-bucket"
+        },
+        "sourceipaddress": "203.0.113.50",
+        "useridentity": {
+            "type": "IAMUser",
+            "principalid": "AIDAEXAMPLE",
+            "arn": "arn:aws:iam::123456789012:user/admin",
+            "accountid": "123456789012",
+            "username": "admin"
+        },
+        "readonly": false
+    }
+}

@@ -16,11 +16,13 @@ logger = logging.getLogger()
 
 
 class TestPluginGsuiteLogins(object):
-    def setup(self):
+    def setup_method(self):
         from normalization_plugins.gsuite_login import message
 
         self.plugin = message()
-        with open("./lambdas/tests/samples/sample_gsuite_login_event.json", "r") as f:
+        with open(
+            Path(__file__).parent / "samples" / "sample_gsuite_login_event.json", "r"
+        ) as f:
             self.inbound_event = json.loads(f.read())
         # run the event through default plugins
         # to set the shell and lowercase all keys
