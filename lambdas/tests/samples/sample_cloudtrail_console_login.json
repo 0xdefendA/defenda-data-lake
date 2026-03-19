@@ -1,0 +1,39 @@
+{
+    "source": "cloudtrail",
+    "tags": [],
+    "details": {
+        "eventcategory": "Management",
+        "eventname": "ConsoleLogin",
+        "eventtime": "2026-03-01T23:50:54Z",
+        "awsregion": "us-east-2",
+        "eventtype": "AwsConsoleSignIn",
+        "managementevent": true,
+        "eventsource": "signin.amazonaws.com",
+        "eventid": "3e88c788-d89d-4b57-bba4-1f13e819624f",
+        "recipientaccountid": "0123456789012",
+        "eventversion": "1.11",
+        "tlsdetails": {
+            "tlsversion": "TLSv1.3",
+            "ciphersuite": "TLS_AES_128_GCM_SHA256",
+            "clientprovidedhostheader": "us-east-2.signin.aws.amazon.com"
+        },
+        "responseelements": {
+            "consolelogin": "Success"
+        },
+        "requestparameters": null,
+        "sourceipaddress": "98.9.3.133",
+        "additionaleventdata": {
+            "mobileversion": "No",
+            "mfaused": "Yes"
+        },
+        "useragent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:147.0) Gecko/20100101 Firefox/147.0",
+        "useridentity": {
+            "type": "IAMUser",
+            "principalid": "AIDAIAQWEE4WWXL2UCG66",
+            "arn": "arn:aws:iam::0123456789012:user/someone",
+            "accountid": "0123456789012",
+            "username": "someone"
+        },
+        "readonly": false
+    }
+}

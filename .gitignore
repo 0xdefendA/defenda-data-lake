@@ -140,4 +140,5 @@ terraform.tfstate*
 
 # uv
 .python-version
-
+# Ignore CSV files that may be generated during testing or development
+*.csv

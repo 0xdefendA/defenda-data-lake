@@ -29,3 +29,20 @@ Fixed the Lambda zip size issue. The zip went from 86MB → **3.6MB** by:
 4. **Adding `lambda.zip` and `tests` to `.dockerignore`** — the old 86MB zip was being copied into the build context and rsync'd into the output
 
 The zip is now well under Lambda's 70MB direct upload limit and should deploy successfully with `terraform apply`.
+
+## CloudTrail normalization plugin ##
+Added a generic CloudTrail normalization plugin (`normalization_plugins/cloudtrail.py`) that handles ALL AWS CloudTrail events by leveraging the consistent top-level structure present in every event.
+
+**What it sets:**
+- **summary**: `{username} {eventname} from {sourceip} in {region}` — e.g. `Someone ConsoleLogin from 98.9.3.133 in us-east-2`
+- **category**: Maps `eventsource` to human-readable categories (authentication, compute, storage, iam, etc.) with fallback to the service name
+- **tags**: `cloudtrail`, `aws`, `read`/`write`, `management`, service name (e.g. `signin`, `s3`, `ec2`)
+- **severity**: Elevated to WARNING for errors, destructive actions (Delete/Terminate/Remove), and root account usage
+
+**Authentication enrichment** (for `signin.amazonaws.com`):
+- Extracts login success/failure → `_login_result`, tags `login-success`/`login-failure`
+- Extracts MFA status → `_mfa_used`, tags `no-mfa` when MFA not used
+
+**Username extraction** handles all CloudTrail identity types: IAMUser, AssumedRole (session name), Root, AWSService, and ARN fallback.
+
+**Tests**: 15 new tests covering console login, destructive actions (DeleteBucket), failed API calls (AssumedRole with errors), existing CreateLogStream sample, and non-cloudtrail passthrough. Full suite: 46/46 passing.
